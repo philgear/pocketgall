@@ -29,3 +29,12 @@ dist-ssr
 
 # Angular framework
 .angular
+
+# Generated Reports & Snapshots
+dom-*.html
+lh-*.json
+lighthouse-*.json
+lighthouse-*.html
+bundle-*.json
+dist_*.json
+.lighthouseci/
