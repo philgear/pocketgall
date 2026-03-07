@@ -995,7 +995,7 @@ Only include a rich-media block when the user explicitly requests visual or rese
     let richCards: RichMediaCard[] | undefined;
     let cleanMd = md;
 
-    const fencedRegex = /```(?:rich-media|json)?\s*(\{[\s\S]*?"cards"\s*:[\s\S]*?\})\s*```/i;
+    const fencedRegex = /```[a-z0-9-]*\s*(\{[\s\S]*?"cards"\s*:[\s\S]*?\})\s*```/i;
     let match = md.match(fencedRegex);
     let jsonStr = '';
 
@@ -1008,6 +1008,7 @@ Only include a rich-media block when the user explicitly requests visual or rese
       if (startIdx !== -1 && endIdx > startIdx) {
         jsonStr = md.substring(startIdx, endIdx + 1);
         cleanMd = md.replace(jsonStr, '').trim();
+        cleanMd = cleanMd.replace(/```[a-z0-9-]*\s*```/gi, '').trim();
       }
     }
 

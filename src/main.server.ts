@@ -1,3 +1,4 @@
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { BootstrapContext, bootstrapApplication, provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import { provideServerRendering } from '@angular/platform-server';
@@ -10,6 +11,7 @@ const serverConfig: ApplicationConfig = {
     providers: [
         provideServerRendering(),
         provideZonelessChangeDetection(),
+        provideHttpClient(withFetch()),
         {
             provide: AI_CONFIG,
             useFactory: () => ({

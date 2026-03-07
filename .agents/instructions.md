@@ -12,6 +12,8 @@ This document provides guidance for AI agents working on the Pocket Gall project
 - Always verify UI changes using the `browser_subagent`.
 - Use `afterNextRender` for DOM-dependent signal initializations.
 - Follow the **Industrial Grace** design standard: premium, obsidian-and-slate palette, obsidian glass effects.
+- **Minimalist Dieter Rams Design Mandate**: All UI updates must prioritize a premium, minimalist design with clarity, neutrality, and functional excellence.
+- **Mobile Responsiveness**: Enforce seamless mobile responsive layouts using `100dvh` to ensure perfect fit on mobile devices (e.g., Pixel Watch, smartphones). Avoid hardcoded pixel heights where `100dvh` and CSS grid/flexbox provide better responsive scaling.
 
 ## Layout System
 The layout is managed in `AppComponent` with a multi-directional resizable grid:

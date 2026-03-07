@@ -289,7 +289,7 @@ import { SafeHtmlPipe } from '../pipes/safe-html.pipe';
     <!-- Preview & Print Modal -->
     @if (showPreviewModal()) {
       <div class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 no-print">
-        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div class="bg-white w-full max-w-4xl max-h-[85dvh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-[#F9FAFB]">
             <div>
               <h2 class="text-lg font-bold text-[#1C1C1C]">Preview & Print Care Plan</h2>

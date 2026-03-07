@@ -22,11 +22,11 @@ app.use(compression());
 // Trust the Google Cloud Run proxy so req.hostname resolves correctly
 app.set('trust proxy', true);
 
-// Redirect legacy understory and pocketgull URLs for pocketgull.app domain
+// Redirect legacy understory and pocketgull URLs for pocketgall.app domain
 app.use((req, res, next) => {
   const host = req.hostname || '';
   if (host.includes('understory') || host.includes('pocketgull') || host.includes('pocketgull.com')) {
-    return res.redirect(301, `https://pocketgull.app${req.originalUrl}`);
+    return res.redirect(301, `https://pocketgall.app${req.originalUrl}`);
   }
   next();
 });
@@ -173,10 +173,10 @@ app.use((req, res, next) => {
 
 /**
  * Start the server if this module is the main entry point, or it is ran via PM2.
- * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
+ * The server listens on the port defined by the `PORT` environment variable, or defaults to 4200.
  */
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
-  const port = process.env['PORT'] || 4000;
+  const port = process.env['PORT'] || 4200;
   app.listen(port, (error) => {
     if (error) {
       throw error;

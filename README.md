@@ -108,7 +108,7 @@ To run this project in a local development environment:
 
 Pocket Gull's backend service and Express proxy layer is architecturally designed to deploy directly to **Google Cloud Run**.
 
-- **Proof of Action:** Successfully deployed to Google Cloud Run! The live application is available at: [https://pocketgull.app](https://pocketgull.app) (and [https://pocket-gall-444980566010.us-west1.run.app](https://pocket-gall-444980566010.us-west1.run.app))
+- **Proof of Action:** Successfully deployed to Google Cloud Run! The live application is available at: [https://pocketgall.app](https://pocketgall.app) (and [https://understory-315235665910.us-west1.run.app](https://understory-315235665910.us-west1.run.app))
 - **Repository Proof:** See `./server.js` and `./src/services/clinical-intelligence.service.ts` for Google Cloud infrastructure integrations.
 
 ---

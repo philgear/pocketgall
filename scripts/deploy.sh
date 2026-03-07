@@ -12,14 +12,10 @@ echo "=========================================================="
 # gcloud auth login
 # gcloud config set project YOUR_PROJECT_ID
 
-PROJECT_ID=$(gcloud config get-value project)
-if [ -z "$PROJECT_ID" ]; then
-    echo "❌ Error: Google Cloud Project ID is not set."
-    echo "Please set it using: gcloud config set project <PROJECT_ID>"
-    exit 1
-fi
+# Deploying to the explicit Understory project as per user instruction
+PROJECT_ID="pgbizastroidx"
 
-SERVICE_NAME="pocket-gull"
+SERVICE_NAME="understory"
 REGION="us-west1"
 IMAGE_TAG="gcr.io/$PROJECT_ID/$SERVICE_NAME:latest"
 

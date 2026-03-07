@@ -71,25 +71,25 @@ export interface PubMedSearchResult {
           </pocket-gull-button>
           <pocket-gull-button variant="ghost" size="sm" (click)="addBookmark()" icon="m12 15.4 3.75 2.6-1-4.35L18 11l-4.45-.4L12 6.5 10.45 10.6 6 11l3.25 2.65-1 4.35z" title="Bookmark current page" ariaLabel="Bookmark current page">
           </pocket-gull-button>
-          <pocket-gull-button variant="ghost" size="sm" (click)="showCitationForm.set(!showCitationForm())" [class.text-blue-600]="showCitationForm()" icon="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" title="Citation Metadata" ariaLabel="Citation Metadata">
+          <pocket-gull-button variant="ghost" size="sm" (click)="showCitationForm.set(!showCitationForm())" [class.text-gray-800]="showCitationForm()" icon="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" title="Citation Metadata" ariaLabel="Citation Metadata">
           </pocket-gull-button>
         </div>
 
         <!-- Citation Metadata Form -->
         @if (showCitationForm()) {
-          <div class="mt-3 p-3 bg-white border border-blue-100 rounded-md shadow-inner space-y-2 animate-in fade-in slide-in-from-top-1">
-            <h4 class="text-[10px] font-bold text-blue-800 uppercase tracking-tighter mb-1">Citation Metadata (UKRIO Style)</h4>
+          <div class="mt-3 p-3 bg-white border border-gray-200 rounded-md shadow-inner space-y-2 animate-in fade-in slide-in-from-top-1">
+            <h4 class="text-[10px] font-bold text-gray-800 uppercase tracking-tighter mb-1">Citation Metadata (UKRIO Style)</h4>
             <div class="grid grid-cols-2 gap-2">
               <pocket-gull-input [value]="authors()" (valueChange)="authors.set($event)" placeholder="Authors (e.g. Smith et al.)" size="sm"></pocket-gull-input>
               <pocket-gull-input [value]="doi()" (valueChange)="doi.set($event)" placeholder="DOI (e.g. 10.1038/s41586-021-03503-x)" size="sm"></pocket-gull-input>
             </div>
             <div class="flex items-center gap-4">
               <label for="peer-reviewed-checkbox" class="flex items-center gap-1.5 cursor-pointer">
-                <input id="peer-reviewed-checkbox" type="checkbox" [checked]="isPeerReviewed()" (change)="isPeerReviewed.set(!isPeerReviewed())" class="w-3 h-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                <input id="peer-reviewed-checkbox" type="checkbox" [checked]="isPeerReviewed()" (change)="isPeerReviewed.set(!isPeerReviewed())" class="w-3 h-3 rounded border-gray-300 text-gray-800 focus:ring-gray-500">
                 <span class="text-[11px] text-gray-600">Peer Reviewed</span>
               </label>
               <label for="auto-cite-checkbox" class="flex items-center gap-1.5 cursor-pointer">
-                <input id="auto-cite-checkbox" type="checkbox" [checked]="autoCite()" (change)="autoCite.set(!autoCite())" class="w-3 h-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                <input id="auto-cite-checkbox" type="checkbox" [checked]="autoCite()" (change)="autoCite.set(!autoCite())" class="w-3 h-3 rounded border-gray-300 text-gray-800 focus:ring-gray-500">
                 <span class="text-[11px] text-gray-600">Include in Summary References</span>
               </label>
             </div>
@@ -104,11 +104,11 @@ export interface PubMedSearchResult {
             <div class="group flex items-center">
                 <button (click)="loadUrl(bookmark.url)" 
                         class="pl-2 pr-1 py-0.5 text-[11px] font-medium rounded-l-md transition-colors max-w-48 truncate flex items-center gap-1.5"
-                        [class.bg-blue-600]="bookmark.cited"
+                        [class.bg-gray-800]="bookmark.cited"
                         [class.text-white]="bookmark.cited"
-                        [class.bg-blue-100]="!bookmark.cited"
-                        [class.text-blue-700]="!bookmark.cited"
-                        [class.hover:bg-blue-200]="!bookmark.cited">
+                        [class.bg-gray-100]="!bookmark.cited"
+                        [class.text-gray-500]="!bookmark.cited"
+                        [class.hover:bg-gray-200]="!bookmark.cited">
                   @if (bookmark.isPeerReviewed) {
                     <svg class="w-3 h-3 opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
                   }
@@ -116,15 +116,15 @@ export interface PubMedSearchResult {
                 </button>
                 <button (click)="toggleCite(bookmark)"
                         class="px-1.5 py-0.5 text-[10px] uppercase font-black transition-colors border-r border-gray-200/20"
-                        [class.bg-blue-700]="bookmark.cited"
+                        [class.bg-gray-900]="bookmark.cited"
                         [class.text-white]="bookmark.cited"
-                        [class.bg-blue-50]="!bookmark.cited"
-                        [class.text-blue-400]="!bookmark.cited"
+                        [class.bg-gray-50]="!bookmark.cited"
+                        [class.text-gray-400]="!bookmark.cited"
                         [title]="bookmark.cited ? 'Remove from summary references' : 'Include in summary references'">
                     {{ bookmark.cited ? 'CITED' : 'CITE' }}
                 </button>
                 <button (click)="removeBookmark(bookmark.url)"
-                        class="px-1 py-0.5 text-blue-500 bg-blue-100 hover:bg-red-100 hover:text-red-600 rounded-r-md transition-colors opacity-50 group-hover:opacity-100">
+                        class="px-1 py-0.5 text-gray-400 bg-gray-100 hover:bg-red-100 hover:text-red-600 rounded-r-md transition-colors opacity-50 group-hover:opacity-100">
                     ×
                 </button>
             </div>
@@ -147,7 +147,7 @@ export interface PubMedSearchResult {
             } @else {
               @for (res of pubmedResults(); track res.id) {
                 <div class="bg-white p-4 rounded-md shadow-sm border border-gray-200">
-                  <h4 class="font-bold text-blue-800 text-sm leading-snug mb-1" [innerHTML]="res.title | safeHtml"></h4>
+                  <h4 class="font-bold text-gray-800 text-sm leading-snug mb-1" [innerHTML]="res.title | safeHtml"></h4>
                   <p class="text-xs text-gray-600 mb-1 font-medium">{{ res.authors }}</p>
                   <div class="text-[11px] text-gray-500 flex items-center gap-2 mb-3">
                     <span class="font-bold">{{ res.source }}</span> • <span>{{ res.pubdate }}</span>
@@ -159,7 +159,7 @@ export interface PubMedSearchResult {
                     <pocket-gull-button variant="primary" size="sm" (click)="addPubmedBookmark(res)" icon="m12 15.4 3.75 2.6-1-4.35L18 11l-4.45-.4L12 6.5 10.45 10.6 6 11l3.25 2.65-1 4.35z">
                       Bookmark & Cite
                     </pocket-gull-button>
-                    <a [href]="'https://pubmed.ncbi.nlm.nih.gov/' + res.id + '/'" target="_blank" class="text-xs font-semibold text-gray-600 hover:text-blue-600 transition-colors inline-block px-2 py-1 bg-gray-100 hover:bg-blue-50 rounded">
+                    <a [href]="'https://pubmed.ncbi.nlm.nih.gov/' + res.id + '/'" target="_blank" class="text-xs font-semibold text-gray-600 hover:text-gray-800 transition-colors inline-block px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">
                       Open in PubMed
                     </a>
                   </div>

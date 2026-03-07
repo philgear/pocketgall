@@ -25,7 +25,7 @@ import { PocketGullButtonComponent } from './shared/pocket-gull-button.component
       </div>
 
       @if (isOpen()) {
-        <div class="origin-top-right absolute right-0 mt-2 w-72 rounded-sm shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden flex flex-col max-h-[60vh]">
+        <div class="origin-top-right absolute right-0 mt-2 w-72 rounded-sm shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden flex flex-col max-h-[60dvh]">
           
           <div class="bg-gray-50 px-4 py-2 border-b border-gray-100 flex items-center justify-between shrink-0">
              <span class="text-xs font-bold uppercase tracking-widest text-gray-500">Active Roster</span>

@@ -42,7 +42,7 @@ import { PatientManagementService } from '../services/patient-management.service
                <div (click)="loadHistory(entry)" 
                     class="group p-4 rounded-xl border border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm cursor-pointer transition-all">
                  <div class="flex justify-between items-start mb-1">
-                   <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                   <span class="text-xs font-bold text-gray-800 bg-gray-200 px-2 py-0.5 rounded-full">
                      SNAPSHOT
                    </span>
                    <span class="text-xs text-gray-400 font-medium">
@@ -124,8 +124,8 @@ import { PatientManagementService } from '../services/patient-management.service
               </div>
             } @else {
                <div class="hidden md:flex items-center gap-2 mr-2">
-                 <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                 <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700">Awaiting Data</span>
+                 <div class="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></div>
+                 <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Awaiting Data</span>
               </div>
             }
           </div>

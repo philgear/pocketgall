@@ -41,7 +41,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     
-    <div class="min-h-[100dvh] md:h-screen w-full bg-[#EEEEEE] flex flex-col md:overflow-hidden font-sans selection:bg-green-100 selection:text-green-900 group/app">
+    <div class="min-h-[100dvh] md:h-[100dvh] w-full bg-[#EEEEEE] flex flex-col md:overflow-hidden font-sans selection:bg-green-100 selection:text-green-900 group/app">
       
       <app-dictation-modal></app-dictation-modal>
 
@@ -347,7 +347,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
                  [class.tab-fade-enter]="!!state.selectedPartId() && mobileActiveTab() === 'analysis'">
              
                  <!-- Section 1: Analysis Intake Container -->
-                 <div class="overflow-hidden flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 transition-shadow duration-300 hover:shadow-md flex-1 md:min-h-0 min-h-[50vh]">
+                 <div class="overflow-hidden flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 transition-shadow duration-300 hover:shadow-md flex-1 md:min-h-0 min-h-[50dvh]">
                      <app-analysis-container class="block h-full min-h-0 min-w-0" appReveal [revealDelay]="100"></app-analysis-container>
                  </div>
             </div>
