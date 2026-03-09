@@ -1,0 +1,84 @@
+import { Injectable, signal, effect, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+
+export type AppTheme = 'light' | 'dark' | 'system';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ThemeService {
+  public currentTheme = signal<AppTheme>('system');
+  public activeTheme = signal<'light' | 'dark'>('light');
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.initTheme();
+      
+      // Setup effect to save and apply the theme when the signal changes
+      effect(() => {
+        const theme = this.currentTheme();
+        this.saveTheme(theme);
+        this.resolveTheme(theme);
+      });
+
+      // Setup effect to actually apply the active theme classes to the DOM
+      effect(() => {
+        const resolvedTheme = this.activeTheme();
+        this.applyThemeToDom(resolvedTheme);
+      });
+    }
+  }
+
+  private initTheme() {
+    const savedTheme = localStorage.getItem('pocket_gull_theme') as AppTheme;
+    if (savedTheme) {
+      this.currentTheme.set(savedTheme);
+    } else {
+      this.currentTheme.set('system');
+    }
+
+    // Listen to OS prefers-color-scheme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', (e) => {
+      if (this.currentTheme() === 'system') {
+        this.activeTheme.set(e.matches ? 'dark' : 'light');
+      }
+    });
+  }
+
+  private saveTheme(theme: AppTheme) {
+    localStorage.setItem('pocket_gull_theme', theme);
+  }
+
+  private resolveTheme(theme: AppTheme) {
+    if (theme === 'system') {
+      const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      this.activeTheme.set(isSystemDark ? 'dark' : 'light');
+    } else {
+      this.activeTheme.set(theme);
+    }
+  }
+
+  private applyThemeToDom(resolvedTheme: 'light' | 'dark') {
+    if (typeof document === 'undefined') return;
+    
+    if (resolvedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      // Update meta theme-color for PWA
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', '#111827');
+      }
+    } else {
+      document.documentElement.classList.remove('dark');
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', '#1C1C1C'); 
+      }
+    }
+  }
+
+  public setTheme(theme: AppTheme) {
+    this.currentTheme.set(theme);
+  }
+}

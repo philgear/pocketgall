@@ -16,6 +16,7 @@ import { IntelligenceProviderToken } from './services/ai/intelligence.provider.t
 import { GeminiProvider } from './services/ai/gemini.provider';
 import { ClinicalIntelligenceService } from './services/clinical-intelligence.service';
 import { PatientManagementService } from './services/patient-management.service';
+import { ThemeService } from './services/theme.service';
 import { RevealDirective } from './directives/reveal.directive';
 import { DEMO_ANALYSIS_REPORT } from './demo-data';
 
@@ -341,7 +342,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
             }
 
              <!-- Column 3 (Right Area): Split View -->
-            <div class="flex-1 flex md:overflow-hidden relative gap-3 md:gap-6 flex-col"
+            <div class="flex-1 md:flex-[1.5] flex md:overflow-hidden relative gap-3 md:gap-6 flex-col"
                  [class.hidden]="isAnalysisCollapsed()"
                  [class.max-md:hidden]="!!state.selectedPartId() && mobileActiveTab() !== 'analysis'"
                  [class.tab-fade-enter]="!!state.selectedPartId() && mobileActiveTab() === 'analysis'">
@@ -379,6 +380,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
 })
 export class AppComponent implements OnDestroy {
   state = inject(PatientStateService);
+  private theme = inject(ThemeService);
   private ngZone = inject(NgZone);
   private patientMgmt = inject(PatientManagementService);
   private clinicalIntelligence = inject(ClinicalIntelligenceService);
