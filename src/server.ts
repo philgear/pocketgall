@@ -70,7 +70,7 @@ async function fetchGeminiApiKey() {
     const [version] = await client.accessSecretVersion({
       name: `projects/${projectId}/secrets/GEMINI_API_KEY/versions/latest`,
     });
-    const payload = version.payload?.data?.toString('utf8') || '';
+    const payload = version.payload?.data ? Buffer.from(version.payload.data).toString('utf8') : '';
     console.log('[Secrets] Successfully fetched GEMINI_API_KEY from GCP.');
     return payload;
   } catch (err: any) {

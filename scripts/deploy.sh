@@ -13,7 +13,7 @@ echo "=========================================================="
 # gcloud config set project YOUR_PROJECT_ID
 
 # Deploying to the explicit Understory project as per user instruction
-PROJECT_ID="pgbizastroidx"
+PROJECT_ID="understory"
 
 SERVICE_NAME="understory"
 REGION="us-west1"

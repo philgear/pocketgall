@@ -9,7 +9,7 @@ import { PatientStateService } from '../services/patient-state.service';
 import { MarkdownService } from '../services/markdown.service';
 import { PocketGullButtonComponent } from './shared/pocket-gull-button.component';
 import { ClinicalIcons } from '../assets/clinical-icons';
-import { SafeHtmlPipe } from '../pipes/safe-html.pipe';
+import { SafeHtmlPipe } from '../pipes/safe-html-new.pipe';
 
 export interface NodeAgentDialogData {
     nodeKey: string;

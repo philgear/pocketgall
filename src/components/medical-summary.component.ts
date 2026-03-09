@@ -10,7 +10,7 @@ import { marked } from 'marked';
 import { PocketGullButtonComponent } from './shared/pocket-gull-button.component';
 import { PocketGullInputComponent } from './shared/pocket-gull-input.component';
 import { PocketGullBadgeComponent } from './shared/pocket-gull-badge.component';
-import { SafeHtmlPipe } from '../pipes/safe-html.pipe';
+import { SafeHtmlPipe } from '../pipes/safe-html-new.pipe';
 
 @Component({
   selector: 'app-medical-summary',

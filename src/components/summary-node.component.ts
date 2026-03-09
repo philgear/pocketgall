@@ -16,7 +16,7 @@ import { ClinicalIntelligenceService } from '../services/clinical-intelligence.s
 import { MarkdownService } from '../services/markdown.service';
 import { RichMediaService, RichMediaCard } from '../services/rich-media.service';
 import { Medical3DViewerComponent } from './medical-3d-viewer.component';
-import { SafeHtmlPipe } from '../pipes/safe-html.pipe';
+import { SafeHtmlPipe } from '../pipes/safe-html-new.pipe';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

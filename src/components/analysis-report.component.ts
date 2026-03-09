@@ -5,7 +5,7 @@ import { PatientStateService } from '../services/patient-state.service';
 import { PatientManagementService } from '../services/patient-management.service';
 import { HistoryEntry } from '../services/patient.types';
 import { MarkdownService } from '../services/markdown.service';
-import { SafeHtmlPipe } from '../pipes/safe-html.pipe';
+import { SafeHtmlPipe } from '../pipes/safe-html-new.pipe';
 import { DictationService } from '../services/dictation.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 

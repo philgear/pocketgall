@@ -10,7 +10,7 @@ import { BodyPartIssue, BODY_PART_NAMES, BODY_PART_MAPPING, HistoryEntry } from 
 import { PocketGullButtonComponent } from './shared/pocket-gull-button.component';
 import { PocketGullInputComponent } from './shared/pocket-gull-input.component';
 import { PocketGullBadgeComponent } from './shared/pocket-gull-badge.component';
-import { SafeHtmlPipe } from '../pipes/safe-html.pipe';
+import { SafeHtmlPipe } from '../pipes/safe-html-new.pipe';
 
 interface NoteTimelineItem extends BodyPartIssue {
   date: string;

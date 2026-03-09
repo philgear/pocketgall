@@ -71,9 +71,7 @@
               "compression",
               "@google-cloud/secret-manager",
               "@google/generative-ai",
-              "swagger-ui-express",
-              "dompurify",
-              "jsdom"
+              "swagger-ui-express"
             ],
             "security": {
               "allowedHosts": [
@@ -125,5 +123,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "e9296bcc-7486-41c0-9d35-11e3d9f14f07"
   }
 }

@@ -5,7 +5,7 @@ import { PatientStateService } from '../services/patient-state.service';
 import { ClinicalIntelligenceService } from '../services/clinical-intelligence.service';
 import { DictationService } from '../services/dictation.service';
 import { PatientManagementService } from '../services/patient-management.service';
-import { SafeHtmlPipe } from '../pipes/safe-html.pipe';
+import { SafeHtmlPipe } from '../pipes/safe-html-new.pipe';
 import { PocketGullButtonComponent } from './shared/pocket-gull-button.component';
 import { PocketGullInputComponent } from './shared/pocket-gull-input.component';
 import { MarkdownService } from '../services/markdown.service';
