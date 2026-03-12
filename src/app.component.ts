@@ -744,12 +744,37 @@ export class AppComponent implements OnDestroy {
   }
 
   openFinalizePreview() {
-    let plan = this.state.activePatientSummary() || '';
+    let plan = this.state.activePatientSummary();
+    if (!plan) {
+      const results = this.clinicalIntelligence.analysisResults();
+      const annotations = this.state.lensAnnotations();
+      
+      if (Object.keys(results).length > 0) {
+        plan = Object.entries(results).map(([lens, text]) => {
+          let updatedText = text;
+          const lensAnnots = annotations[lens];
+          if (lensAnnots) {
+            for (const [nodeKey, ann] of Object.entries(lensAnnots)) {
+              if (ann.bracketState === 'removed') {
+                updatedText = updatedText.replace(nodeKey, `~~${nodeKey}~~`);
+              } else if (ann.modifiedText) {
+                updatedText = updatedText.replace(nodeKey, ann.modifiedText);
+              }
+            }
+          }
+          return updatedText;
+        }).join('\n\n');
+      } else {
+        plan = '';
+      }
+    }
+
     const draftItems = this.state.draftSummaryItems();
     if (draftItems.length > 0) {
       const newContent = draftItems.map(item => `- ${item.text}`).join('\n');
       plan = plan ? `${plan}\n\n### Added ${new Date().toLocaleDateString()}\n${newContent}` : `### Patient Summary\n${newContent}`;
     }
+    
     const finalText = plan || 'No Active Patient Summary recorded for this visit.';
     this.previewText.set(finalText);
     this.originalPreviewText.set(finalText);

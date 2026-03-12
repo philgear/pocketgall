@@ -35,6 +35,7 @@ export class PatientStateService {
   readonly anatomyViewMode = signal<'skin' | 'muscle' | 'skeleton' | 'mind' | 'molecular'>('skin');
   readonly activePatientSummary = signal<string | null>(null);
   readonly draftSummaryItems = signal<DraftSummaryItem[]>([]);
+  readonly lensAnnotations = signal<Record<string, Record<string, any>>>({});
 
   // --- Patient Data State ---
   readonly issues = signal<Record<string, BodyPartIssue[]>>({});

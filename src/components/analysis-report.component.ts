@@ -511,9 +511,7 @@ export class AnalysisReportComponent implements OnDestroy, AfterViewInit {
     }
   });
 
-  readonly lensAnnotations = signal<LensAnnotations>({});
-
-  // Track save status per node
+  get lensAnnotations() { return this.state.lensAnnotations; }  // Track save status per node
   readonly nodeSaveStatuses = signal<Record<string, 'idle' | 'saving' | 'saved'>>({});
 
   private autoSaveSubject = new Subject<void>();
@@ -543,11 +541,11 @@ export class AnalysisReportComponent implements OnDestroy, AfterViewInit {
         const latestFinalized = patient.history.find(e => e.type === 'FinalizedPatientSummary');
         if (latestFinalized && latestFinalized.type === 'FinalizedPatientSummary') {
           untracked(() => {
-            this.lensAnnotations.set(latestFinalized.annotations || {});
+            this.state.lensAnnotations.set(latestFinalized.annotations || {});
           });
         } else {
           untracked(() => {
-            this.lensAnnotations.set({});
+            this.state.lensAnnotations.set({});
           });
         }
       }
@@ -675,7 +673,7 @@ export class AnalysisReportComponent implements OnDestroy, AfterViewInit {
 
 
   private updateAnnotation(key: string, data: Partial<NodeAnnotation>) {
-    this.lensAnnotations.update(all => {
+    this.state.lensAnnotations.update(all => {
       const currentLens = this.activeLens();
       const lensData = { ...(all[currentLens] || {}) };
       lensData[key] = { ...(lensData[key] || { note: '', bracketState: 'normal' }), ...data };
