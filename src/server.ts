@@ -215,7 +215,10 @@ app.post('/api/ai/stream', express.json(), async (req, res) => {
       return;
     }
     const { GoogleGenAI } = await import('@google/genai');
-    const aiClient = new GoogleGenAI({ apiKey: key });
+    const aiClient = new GoogleGenAI({ 
+      apiKey: key,
+      httpOptions: { headers: { 'Referer': 'https://pocketgull.app/' } }
+    });
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -249,7 +252,10 @@ app.post('/api/ai/chat/start', express.json(), async (req, res) => {
     const key = await getApiKey();
     if (!key) throw new Error('API key not available on server.');
     const { GoogleGenAI } = await import('@google/genai');
-    const aiClient = new GoogleGenAI({ apiKey: key });
+    const aiClient = new GoogleGenAI({ 
+      apiKey: key,
+      httpOptions: { headers: { 'Referer': 'https://pocketgull.app/' } }
+    });
     const chat = aiClient.chats.create({
       model: model || 'gemini-2.5-flash',
       config: { systemInstruction, temperature: temperature ?? 0.1 }
