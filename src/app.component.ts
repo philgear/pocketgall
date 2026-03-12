@@ -278,7 +278,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
            <div class="h-4 w-px bg-gray-300 dark:bg-zinc-700 hidden sm:block"></div>
            <app-patient-dropdown></app-patient-dropdown>
 
-           <div class="flex items-center gap-2 overflow-x-auto no-scrollbar min-w-0 pr-2 pb-1 pt-1 -mb-1 -mt-1 snap-x snap-mandatory">
+           <div class="flex items-center gap-2 pr-2 pb-1 pt-1 -mb-1 -mt-1">
              <!-- EXPORT DROPDOWN -->
              <div class="relative group dropdown-container" (mouseenter)="exportMenuOpen.set(true)" (mouseleave)="exportMenuOpen.set(false)">
                <button class="snap-start shrink-0 flex items-center gap-2 px-3 py-1.5 border border-gray-300 dark:border-zinc-700 transition-colors text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:border-gray-400 dark:hover:border-zinc-500 rounded-md">
