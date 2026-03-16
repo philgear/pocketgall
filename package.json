@@ -76,7 +76,9 @@
     "deploy": "npm run build && gcloud run deploy pocket-gull --source . --region=us-west1 --set-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest --quiet",
     "serve:ssr:app": "node dist/server/server.mjs",
     "start": "node dist/server/server.mjs",
-    "gcp-build": "npm run build && npm prune --production"
+    "gcp-build": "npm run build && npm prune --production",
+    "audit": "lighthouse http://localhost:4000 --view",
+    "estimate-effort": "node scripts/estimate-effort.js"
   },
   "dependencies": {
     "@angular/build": "^21.2.2",
@@ -114,11 +116,13 @@
     "dompurify": "^3.3.3",
     "express": "^5.2.1",
     "genkit": "^1.29.0",
+    "helmet": "^8.1.0",
     "jspdf": "^4.2.0",
     "marked": "^17.0.4",
     "patch-package": "^8.0.1",
     "postcss": "^8.5.8",
     "rxjs": "^7.8.2",
+    "sloc": "^0.3.2",
     "tailwindcss": "^3.4.19",
     "three": "^0.183.2",
     "ws": "^8.19.0",
