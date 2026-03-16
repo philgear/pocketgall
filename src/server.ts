@@ -205,7 +205,7 @@ app.post('/api/ai/analyze-translation', express.json(), async (req, res) => {
 });
 
 
-// Server-Side Streaming Endpoint (SSE) - replaces client-side GoogleGenAI call
+// Server-Side Streaming Endpoint
 app.post('/api/ai/stream', express.json(), async (req, res) => {
   try {
     const { patientData, systemInstruction, model, temperature } = req.body;
@@ -214,28 +214,44 @@ app.post('/api/ai/stream', express.json(), async (req, res) => {
       res.status(500).json({ error: 'API key not available on server.' });
       return;
     }
-    const { GoogleGenAI } = await import('@google/genai');
-    const aiClient = new GoogleGenAI({ 
-      apiKey: key,
-      httpOptions: { headers: { 'Referer': 'https://pocketgull.app/' } }
-    });
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    const streamResult = await aiClient.models.generateContentStream({
-      model: model || 'gemini-2.5-flash',
-      contents: patientData,
-      config: { systemInstruction, temperature: temperature ?? 0.1 }
+    const rawModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${rawModel}:streamGenerateContent?alt=sse&key=${key}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Referer': 'https://pocketgull.app/'
+      },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: patientData }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        generationConfig: { temperature: temperature ?? 0.1 }
+      })
     });
 
-    for await (const chunk of streamResult) {
-      if (chunk.text) {
-        res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-      }
+    if (!response.ok || !response.body) {
+         throw new Error(`Gemini API Error: ${response.statusText}`);
     }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        // The REST API already formats as SSE when alt=sse is passed
+        // However, it sends raw chunks that might need parsing if we want to extract text early,
+        // but the frontend is already built to parse standard SSE formatting.
+        res.write(chunk);
+    }
+    
+    // The Gemini REST streams end naturally, but our frontend looks for [DONE]
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (e: any) {
@@ -244,23 +260,22 @@ app.post('/api/ai/stream', express.json(), async (req, res) => {
 });
 
 // Server-Side Chat Session Management
-const chatSessions = new Map<string, any>();
+// We manage the conversation history array here instead of a stateful SDK object
+const chatSessions = new Map<string, { history: any[], systemInstruction: string, model: string, temperature: number }>();
 
 app.post('/api/ai/chat/start', express.json(), async (req, res) => {
   try {
     const { sessionId, systemInstruction, model, temperature } = req.body;
     const key = await getApiKey();
     if (!key) throw new Error('API key not available on server.');
-    const { GoogleGenAI } = await import('@google/genai');
-    const aiClient = new GoogleGenAI({ 
-      apiKey: key,
-      httpOptions: { headers: { 'Referer': 'https://pocketgull.app/' } }
-    });
-    const chat = aiClient.chats.create({
+    
+    chatSessions.set(sessionId, {
+      history: [],
+      systemInstruction,
       model: model || 'gemini-2.5-flash',
-      config: { systemInstruction, temperature: temperature ?? 0.1 }
+      temperature: temperature ?? 0.1
     });
-    chatSessions.set(sessionId, chat);
+
     // Clean up old sessions (keep max 50)
     if (chatSessions.size > 50) {
       const oldestKey = chatSessions.keys().next().value;
@@ -275,10 +290,42 @@ app.post('/api/ai/chat/start', express.json(), async (req, res) => {
 app.post('/api/ai/chat/message', express.json(), async (req, res) => {
   try {
     const { sessionId, message } = req.body;
-    const chat = chatSessions.get(sessionId);
-    if (!chat) throw new Error('Chat session not found. Please refresh and try again.');
-    const result = await chat.sendMessage({ message });
-    res.json({ text: result.text });
+    const session = chatSessions.get(sessionId);
+    if (!session) throw new Error('Chat session not found. Please refresh and try again.');
+    
+    const key = await getApiKey();
+    if (!key) throw new Error('API key not available on server.');
+
+    // Append user message
+    session.history.push({ role: 'user', parts: [{ text: message }] });
+
+    // Strip models/ prefix if already there, so we can reliably prepend it
+    const rawModel = session.model.replace(/^models\//, '');
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${rawModel}:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Referer': 'https://pocketgull.app/'
+      },
+      body: JSON.stringify({
+        contents: session.history,
+        systemInstruction: { parts: [{ text: session.systemInstruction }] },
+        generationConfig: { temperature: session.temperature }
+      })
+    });
+
+    if (!response.ok) {
+       const errText = await response.text();
+       throw new Error(`Gemini API Error: ${errText}`);
+    }
+
+    const data = await response.json();
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Append model response
+    session.history.push({ role: 'model', parts: [{ text: responseText }] });
+
+    res.json({ text: responseText });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }

@@ -21,6 +21,9 @@ import { ExportService } from './services/export.service';
 import { RevealDirective } from './directives/reveal.directive';
 import { DEMO_ANALYSIS_REPORT } from './demo-data';
 import { FhirCallbackComponent } from './components/fhir-callback.component';
+import { WalkthroughTourComponent } from './components/walkthrough-tour.component';
+import { WalkthroughTourService } from './services/walkthrough-tour.service';
+
 
 import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
 
@@ -39,7 +42,8 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
     IntakeFormComponent,
     VoiceAssistantComponent,
     RevealDirective,
-    FhirCallbackComponent
+    FhirCallbackComponent,
+    WalkthroughTourComponent
   ],
   providers: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +54,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
     <div class="min-h-[100dvh] md:h-[100dvh] w-full bg-[#EEEEEE] dark:bg-zinc-950 text-[#1C1C1C] dark:text-zinc-100 flex flex-col md:overflow-hidden font-sans selection:bg-green-100 selection:text-green-900 group/app">
       
       <app-dictation-modal></app-dictation-modal>
+        <app-walkthrough-tour></app-walkthrough-tour>
 
       @if (!hasApiKey()) {
         <main class="fixed inset-0 bg-white dark:bg-zinc-900 z-[100] flex flex-col items-center justify-center p-6 text-center landmark-main">
@@ -151,7 +156,10 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-600 dark:text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               <p class="text-xs text-amber-800 dark:text-amber-200 font-medium">Demo Mode <span class="hidden sm:inline">— Showing pre-sampled patient data. AI analysis generation requires an API key.</span></p>
             </div>
-            <button (click)="exitDemoMode()" class="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest hover:text-amber-900 dark:hover:text-amber-300 whitespace-nowrap transition-colors">Enter API Key →</button>
+            <div class="flex items-center gap-3">
+
+              <button (click)="exitDemoMode()" class="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest hover:text-amber-900 dark:hover:text-amber-300 whitespace-nowrap transition-colors">Enter API Key →</button>
+            </div>
           </div>
         }
         <!-- Navbar: Pure utility, no decoration -->
@@ -247,6 +255,18 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
               <span class="hidden sm:inline">Research</span>
             </button>
             
+            <!-- Tour Guide Toggle -->
+            <button (click)="tour.forceStart()" 
+                    aria-label="Start Tour Guide"
+                    title="Start Tour Guide"
+                    class="group shrink-0 p-2 border border-gray-300 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-md transition-colors text-gray-500 dark:text-zinc-400 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </button>
+            
             <!-- Theme Toggle -->
             <button (click)="cycleTheme()" 
                     aria-label="Toggle Theme"
@@ -276,7 +296,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
         <nav class="h-12 border-b border-[#EEEEEE] dark:border-zinc-800 flex items-center px-3 sm:px-6 shrink-0 bg-gray-50 dark:bg-[#09090b] z-40 no-print gap-4">
            <div class="text-xs text-gray-500 dark:text-zinc-400 font-medium hidden sm:block">INTAKE MODULE 01</div>
            <div class="h-4 w-px bg-gray-300 dark:bg-zinc-700 hidden sm:block"></div>
-           <app-patient-dropdown></app-patient-dropdown>
+           <div id="tour-patient-dropdown"><app-patient-dropdown></app-patient-dropdown></div>
 
            <div class="flex items-center gap-2 pr-2 pb-1 pt-1 -mb-1 -mt-1">
              <!-- EXPORT DROPDOWN -->
@@ -333,6 +353,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
              <div class="w-px h-4 bg-gray-300 dark:bg-zinc-700 shrink-0 mx-1"></div>
 
              <button (click)="finalizeRecord()"
+                     id="tour-finalize-btn"
                      class="shrink-0 group flex items-center gap-2 px-3 py-1.5 border border-[#689F38]/20 dark:border-[#689F38]/30 transition-colors text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 text-[#689F38] dark:text-[#689F38] bg-[#689F38]/5 dark:bg-[#689F38]/10 hover:bg-[#689F38]/10 dark:hover:bg-[#689F38]/20 rounded-md">
                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                <span>Finalize & Archive</span>
@@ -346,7 +367,8 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
 
           
           <!-- Column 1: Patient Medical Chart -->
-          <div class="relative w-full md:h-full bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 md:overflow-hidden flex flex-col md:block flex-shrink-0"
+           <div class="relative w-full md:h-full bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 md:overflow-hidden flex flex-col md:block flex-shrink-0"
+                id="tour-body-chart"
                [class.md:flex-1]="isAnalysisCollapsed() || inputPanelWidth() === undefined"
                [class.transition-all]="!isDragging()"
                [class.duration-500]="!isDragging()"
@@ -423,7 +445,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
                <div class="shrink-0 w-full md:w-[400px] flex flex-col gap-3 md:gap-6 h-full z-20 transition-all duration-300"
                     [class.max-md:hidden]="mobileActiveTab() !== 'tasks'"
                     [class.tab-fade-enter]="mobileActiveTab() === 'tasks'">
-                  <div class="flex-1 min-h-0 overflow-hidden rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                  <div id="tour-intake-form" class="flex-1 min-h-0 overflow-hidden rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
                     <app-intake-form appReveal></app-intake-form>
                   </div>
                   <div class="flex-1 min-h-0 overflow-hidden rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
@@ -608,6 +630,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
   `]
 })
 export class AppComponent implements OnDestroy {
+  public tour = inject(WalkthroughTourService);
   state = inject(PatientStateService);
   public theme = inject(ThemeService);
   private ngZone = inject(NgZone);
@@ -1286,6 +1309,8 @@ export class AppComponent implements OnDestroy {
     // Inject pre-baked analysis outputs (no API call)
     setTimeout(() => {
       this.clinicalIntelligence.loadArchivedAnalysis(DEMO_ANALYSIS_REPORT);
+      // Start tour after data is loaded so targets exist in DOM
+      setTimeout(() => this.tour.start(), 400);
     }, 350);
   }
 

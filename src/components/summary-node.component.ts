@@ -648,7 +648,7 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
                               } @else {
                                 <div class="rm-empty">No illustrations found for "{{ card.query }}"</div>
                               }
-                              <div class="rm-card-footer">Public domain · <a [href]="'https://commons.wikimedia.org/w/index.php?search=' + card.query + '&title=Special:MediaSearch&go=Go&type=image'" target="_blank" rel="noopener" class="hover:underline hover:text-purple-600 transition-colors">Wikimedia Commons</a></div>
+                              <div class="rm-card-footer">Public domain · <a [href]="getWikimediaSearchUrl(card.query)" target="_blank" rel="noopener" class="hover:underline hover:text-purple-600 transition-colors">Wikimedia Commons</a></div>
                             </div>
                           }
 
@@ -815,7 +815,7 @@ export class SummaryNodeComponent implements AfterViewChecked {
   type = input<'paragraph' | 'list-item'>('paragraph');
   sectionTitle = input<string>('');
 
-  update = output<{ key: string; note?: string; bracketState?: 'normal' | 'added' | 'removed'; acceptedProposal?: string }>();
+  update = output<{ key: string; note?: string; showNote?: boolean; bracketState?: 'normal' | 'added' | 'removed'; acceptedProposal?: string }>();
   dictationToggle = output<void>();
   askAgent = output<{ nodeKey: string; nodeText: string; sectionTitle: string }>();
 
@@ -1114,7 +1114,10 @@ Only include a rich-media block when the user explicitly requests visual or rese
   }
 
   // ─── Existing node interactions ───────────────
-  onDoubleClick() { this.update.emit({ key: this.node().key, note: this.node().note || '' }); }
+  onDoubleClick() { this.update.emit({ key: this.node().key, note: this.node().note || '', showNote: true }); }
+  getWikimediaSearchUrl(query: string): string {
+    return `https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(query)}&title=Special:MediaSearch&go=Go&type=image`;
+  }
 
   toggleBracket() {
     let next: 'normal' | 'added' | 'removed' = 'added';

@@ -14,15 +14,15 @@
 
 ![Pocket Gull Dashboard](./docs/images/pocket-gull_dashboard.png)
 
-Pocket Gull streamlines patient intake with an interactive 3D body map and AI-powered clinical intelligence. It empowers practitioners with rapid data visualization and strategy synthesis for proactive care decisions, acting as an interruptible voice-first clinical co-pilot.
+**TL;DR:** Pocket Gull is a next-generation "Live Agent" orchestrator that streamlines patient intake with an interactive 3D body map and AI-powered clinical intelligence. It acts as an interruptible voice-first clinical co-pilot, empowering practitioners with rapid data visualization and strategy synthesis to reclaim clinical time and reduce latency in care decisions.
 
 **#GeminiLiveAgentChallenge**
 
 ---
 
-## Real-Time Clinical Experience
+## Real-Time Clinical Experience & "Industrial Grace" UI
 
-A highly interactive, aesthetically minimal user interface (Industrial Grace) designed for immediate clinical insight.
+A highly interactive, premium user interface designed for immediate clinical insight. The aesthetics, termed "Industrial Grace", emphasize neutral clarity using CSS Grid for optimized offline print stationery, `100dvh` viewport precision for native-like mobile scrolling, and deep dark modes for low-light environments.
 *For a full demonstration, press the `Demo` button in the top-right of the application to load the patient simulation.*
 
 ### Product Highlights
@@ -56,7 +56,7 @@ Pocket Gull is a next-generation "Live Agent" orchestrator. By combining real-ti
 - **Translation & Localization Tracking:** Doctors can review and explicitly edit multilingual translations of care plans (e.g., Spanish) side-by-side before permanently archiving them into the patient record.
 
 **Technologies Used:**
-- **Framework:** Angular v21.1 (Signals-based, Zoneless), Server-Side Rendering (SSR) & Client-Side Hydration
+- **Framework:** Angular v21.1 (Strict Signals-First Architecture, Zoneless components), Server-Side Rendering (SSR) & Client-Side Hydration for robust UI performance.
 - **Visualization:** Three.js (3D Anatomical Modeling)
 - **Intelligence:** Google Genkit (Serverless Tracing & AI Observability), Google GenAI SDK (`gemini-2.5-flash`) & Google Agent Development Kit (`@google/adk`)
 - **Research Integrations:** Google Programmable Search Engine (CSE) & NIH PubMed E-utilities
@@ -91,12 +91,19 @@ To run this project in a local development environment:
     npm install
     ```
 
-3.  **Run the development server:**
+3.  **Set up your Environment Variables:**
+    Create a `.env` file in the root of your project and configure your Gemini API key:
+    ```bash
+    GEMINI_API_KEY="your_api_key_here"
+    ```
+    *Note: This is strictly required to power the `gemini-2.5-flash` clinical intelligence engine locally.*
+
+4.  **Run the development server:**
     ```bash
     npm run dev
     ```
 
-4.  **Preview Production Build:**
+5.  **Preview Production Build:**
     ```bash
     npm run build
     npm run preview

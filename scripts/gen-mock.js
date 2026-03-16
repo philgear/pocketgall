@@ -36,7 +36,7 @@ ${patient.name} presents with a complex clinical picture primarily characterized
 *   **Short-term (2 weeks)**: 15% reduction in primary symptom severity.
 *   **Long-term (3 months)**: Stabilization of key biomarkers and improved quality of life.
 
-### References (UKRIO Compliant)
+### References
 *   **Smith, J. et al.** (2025). *Integrative Approaches to Chronic Disease*. Journal of Functional Medicine. [DOI:10.1234/jfm.2025.001](https://doi.org/10.1234/jfm.2025.001). Peer-Reviewed.`;
     }
     

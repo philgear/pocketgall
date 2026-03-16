@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, computed, ViewEncapsulation, signal, OnDestroy, effect, viewChild, ElementRef, untracked, afterNextRender, Renderer2, AfterViewInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, ViewEncapsulation, signal, OnDestroy, effect, viewChild, ElementRef, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClinicalIntelligenceService, TranscriptEntry, AnalysisLens } from '../services/clinical-intelligence.service';
 import { PatientStateService } from '../services/patient-state.service';
@@ -7,7 +7,6 @@ import { HistoryEntry } from '../services/patient.types';
 import { MarkdownService } from '../services/markdown.service';
 import { SafeHtmlPipe } from '../pipes/safe-html-new.pipe';
 import { DictationService } from '../services/dictation.service';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 declare var webkitSpeechRecognition: any;
 import { SummaryNode, SummaryNodeItem, ReportSection, ParsedTranscriptEntry, NodeAnnotation, LensAnnotations, VerificationIssue } from './analysis-report.types';
@@ -39,7 +38,7 @@ import { RevealDirective } from '../directives/reveal.directive';
     <!--Analysis Tabs-->
     @if (hasAnyReport()) {
       <div class="px-4 sm:px-8 py-2 sm:py-3 border-b border-[#EEEEEE] dark:border-zinc-800 no-print bg-white/50 dark:bg-[#09090b]/50 backdrop-blur-sm overflow-x-auto">
-        <div class="flex items-center gap-1 border-b border-gray-200 dark:border-zinc-800 min-w-max">
+        <div id="tour-lens-tabs" class="flex items-center gap-1 border-b border-gray-200 dark:border-zinc-800 min-w-max">
           <pocket-gull-button (click)="changeLens('Summary Overview')"
             variant="ghost"
             size="sm"
@@ -165,8 +164,8 @@ import { RevealDirective } from '../directives/reveal.directive';
         <!--AI Report Section-->
         @if (reportSections(); as sections) {
           <div class="flex flex-col gap-4 sm:gap-6 pb-4 w-full min-w-0">
-            @for (section of sections; track $index; let i = $index) {
-              <div appReveal [revealDelay]="i * 100" class="w-full shrink-0 flex flex-col min-h-max min-w-0 overflow-hidden">
+            @for (section of sections; track section.title; let i = $index) {
+              <div [id]="i === 0 ? 'tour-report-node' : null" appReveal [revealDelay]="i * 100" class="w-full shrink-0 flex flex-col min-h-max min-w-0 overflow-hidden">
                 <pocket-gull-card [title]="section.title" [icon]="section.icon" class="flex-1 min-w-0 overflow-hidden">
                   <div right-action class="flex items-center gap-2">
                     @if (intel.isLoading() && !verificationStatus(section.title)) {
@@ -249,7 +248,7 @@ import { RevealDirective } from '../directives/reveal.directive';
     </div>
   `
 })
-export class AnalysisReportComponent implements OnDestroy, AfterViewInit {
+export class AnalysisReportComponent implements OnDestroy {
   protected readonly intel = inject(ClinicalIntelligenceService);
   protected readonly state = inject(PatientStateService);
   protected readonly patientManager = inject(PatientManagementService);
@@ -277,29 +276,7 @@ export class AnalysisReportComponent implements OnDestroy, AfterViewInit {
     this.historyEntries.set(entries.filter(e => e.value?._isSnapshot));
   }
 
-  private resizeObserver: ResizeObserver | null = null;
-  private carePlanObserver: MutationObserver | null = null;
 
-  ngAfterViewInit() {
-    this.setupSummaryObserver();
-  }
-
-  private setupSummaryObserver() {
-    if (typeof window === 'undefined' || typeof MutationObserver === 'undefined') return;
-    const el = this.contentArea()?.nativeElement;
-    if (!el) return;
-
-    this.carePlanObserver = new MutationObserver(() => {
-      // Only auto-scroll if we are generating
-      if (this.intel.isLoading()) {
-        el.scrollTo({ top: el.scrollHeight, behavior: 'auto' });
-      }
-    });
-
-    this.carePlanObserver.observe(el, { childList: true, subtree: true, characterData: true });
-  }
-
-  // --- Analysis State ---
   activeLens = signal<AnalysisLens>('Summary Overview');
 
   // --- Hover Toolbar State ---
@@ -514,7 +491,9 @@ export class AnalysisReportComponent implements OnDestroy, AfterViewInit {
   get lensAnnotations() { return this.state.lensAnnotations; }  // Track save status per node
   readonly nodeSaveStatuses = signal<Record<string, 'idle' | 'saving' | 'saved'>>({});
 
-  private autoSaveSubject = new Subject<void>();
+  // Track save version — incrementing this kicks off the debounced auto-save effect
+  private readonly _saveVersion = signal(0);
+  private _autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     // Auto-scroll effect for transcript
@@ -564,27 +543,36 @@ export class AnalysisReportComponent implements OnDestroy, AfterViewInit {
 
     this.loadHistory();
 
-    // Auto-save debouncing
-    this.autoSaveSubject.pipe(
-      debounceTime(1000)
-    ).subscribe(() => {
-      this.persistToHistory();
+    // Auto-scroll during streaming: react to reportSections() changes while loading
+    effect(() => {
+      this.reportSections();
+      if (!this.intel.isLoading()) return;
+      untracked(() => {
+        const el = this.contentArea()?.nativeElement;
+        el?.scrollTo({ top: el.scrollHeight, behavior: 'auto' });
+      });
+    });
+
+    // Debounced auto-save: effect fires on every _saveVersion tick
+    effect(() => {
+      this._saveVersion(); // subscribe
+      if (this._autoSaveTimer) clearTimeout(this._autoSaveTimer);
+      this._autoSaveTimer = setTimeout(() => untracked(() => this.persistToHistory()), 1000);
     });
   }
 
   ngOnDestroy() {
-    this.carePlanObserver?.disconnect();
+    if (this._autoSaveTimer) clearTimeout(this._autoSaveTimer);
     this.flushAutoSave();
   }
 
   private triggerAutoSave(nodeKey: string) {
-    // Set individual node to saving
     this.nodeSaveStatuses.update(prev => ({ ...prev, [nodeKey]: 'saving' }));
-    this.autoSaveSubject.next();
+    this._saveVersion.update(v => v + 1);
   }
 
   private flushAutoSave() {
-    this.autoSaveSubject.next();
+    if (this._autoSaveTimer) clearTimeout(this._autoSaveTimer);
     this.persistToHistory();
   }
 
@@ -634,7 +622,8 @@ export class AnalysisReportComponent implements OnDestroy, AfterViewInit {
     if (event.note !== undefined) {
       this.updateAnnotation(node.key, { note: event.note });
       node.note = event.note; // Update local node state
-      node.showNote = !!event.note; // Update local node state
+      // Honor explicit showNote intent (e.g. from double-click); only hide if neither showNote nor note content present
+      node.showNote = event.showNote === true ? true : !!event.note;
     }
     if (event.bracketState !== undefined) {
       this.updateAnnotation(node.key, { bracketState: event.bracketState });
