@@ -19,6 +19,7 @@ import { DicomService } from '../services/dicom.service';
       }
       <iframe 
         [src]="safeUrl()" 
+        title="OHIF Medical Viewer"
         class="w-full h-full border-0 absolute inset-0 z-0 bg-black/5"
         allowfullscreen>
       </iframe>

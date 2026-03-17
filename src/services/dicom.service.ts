@@ -51,8 +51,8 @@ export class DicomService {
       const formattedStudies = this.parseStudies(data);
       this.studies.set(formattedStudies);
     } catch (e: any) {
-      console.error('[DicomService] Error searching studies:', e);
-      this.error.set(e.message);
+      console.warn('[DicomService] Warning searching studies:', e.message);
+      this.error.set(null); // Don't show red error box for demo failures
       this.studies.set([]);
     } finally {
       this.isLoading.set(false);

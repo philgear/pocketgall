@@ -443,7 +443,11 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
                [class.hidden]="isChartCollapsed()"
                [class.max-md:hidden]="!!state.selectedPartId()">
                <div class="md:h-full w-full md:overflow-hidden flex-1 flex flex-col min-h-0">
-                 <app-medical-chart class="no-print md:h-full block md:overflow-y-auto w-full max-md:overflow-visible"></app-medical-chart>
+                 @defer (on viewport) {
+                   <app-medical-chart class="no-print md:h-full block md:overflow-y-auto w-full max-md:overflow-visible"></app-medical-chart>
+                 } @placeholder {
+                   <div class="h-full w-full flex items-center justify-center text-zinc-400 text-xs uppercase tracking-widest font-bold">Loading Chart Engine...</div>
+                 }
                </div>
             </div>
 
@@ -511,10 +515,18 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
                     [class.max-md:hidden]="mobileActiveTab() !== 'tasks'"
                     [class.tab-fade-enter]="mobileActiveTab() === 'tasks'">
                   <div id="tour-intake-form" class="flex-1 min-h-0 overflow-hidden rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                    <app-intake-form appReveal></app-intake-form>
+                    @defer (on viewport) {
+                      <app-intake-form appReveal></app-intake-form>
+                    } @placeholder {
+                      <div class="h-full flex items-center justify-center text-zinc-400 text-xs uppercase tracking-widest font-bold border-2 border-dashed border-zinc-200 dark:border-zinc-800 m-4 rounded-xl">Loading Intake...</div>
+                    }
                   </div>
                   <div class="flex-1 min-h-0 overflow-hidden rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                    <app-task-flow appReveal [revealDelay]="100"></app-task-flow>
+                    @defer (on viewport) {
+                      <app-task-flow appReveal [revealDelay]="100"></app-task-flow>
+                    } @placeholder {
+                      <div class="h-full flex items-center justify-center text-zinc-400 text-xs uppercase tracking-widest font-bold border-2 border-dashed border-zinc-200 dark:border-zinc-800 m-4 rounded-xl">Loading Tasks...</div>
+                    }
                   </div>
                </div>
             }
@@ -527,7 +539,11 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
              
                  <!-- Section 1: Analysis Intake Container -->
                  <div class="overflow-hidden flex flex-col bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 transition-shadow duration-300 hover:shadow-md flex-1 md:min-h-0 min-h-[50dvh]">
-                     <app-analysis-container class="block h-full min-h-0 min-w-0" appReveal [revealDelay]="100"></app-analysis-container>
+                     @defer (on viewport) {
+                       <app-analysis-container class="block h-full min-h-0 min-w-0" appReveal [revealDelay]="100"></app-analysis-container>
+                     } @placeholder {
+                       <div class="h-full flex items-center justify-center text-zinc-400 text-xs uppercase tracking-widest font-bold border-2 border-dashed border-zinc-200 dark:border-zinc-800 m-4 rounded-xl">Loading Core AI Synthesis...</div>
+                     }
                  </div>
             </div>
 
@@ -542,7 +558,9 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
         </div>
         
         @if(state.isResearchFrameVisible()) {
-            <app-research-frame></app-research-frame>
+            @defer (on immediate) {
+              <app-research-frame></app-research-frame>
+            }
         }
 
     <!-- Preview & Print Modal -->

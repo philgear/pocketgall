@@ -22,7 +22,7 @@ import { ClinicalIcons } from '../assets/clinical-icons';
         <div class="w-80 border-r border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-[#09090b]/80 backdrop-blur-xl flex flex-col shrink-0 animate-in slide-in-from-left duration-300">
           <div class="p-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-white/50 dark:bg-[#09090b]/50">
             <h2 class="text-xs font-bold text-gray-800 dark:text-zinc-200 uppercase tracking-widest">Clinical History</h2>
-            <button (click)="showHistory.set(false)" class="text-gray-500 hover:text-gray-600">
+            <button (click)="showHistory.set(false)" class="text-gray-500 hover:text-gray-600" aria-label="Close Clinical History">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
