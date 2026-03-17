@@ -239,8 +239,8 @@ export interface ChatEntry {
                                             <pocket-gull-button variant="ghost" size="xs" (click)="actionInsert(entry.text)" icon="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" ariaLabel="Insert into Clinical Notes"></pocket-gull-button>
                                             @if (entry.role === 'model') {
                                                 <div class="w-px h-4 bg-gray-300 dark:bg-zinc-700 mx-1"></div>
-                                                <pocket-gull-button variant="ghost" size="xs" (click)="actionThumbsUp(entry)" icon="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" ariaLabel="Thumbs Up" [class.text-green-600]="entry.feedback === 'up'" [class.dark:text-green-400]="entry.feedback === 'up'"></pocket-gull-button>
-                                                <pocket-gull-button variant="ghost" size="xs" (click)="actionThumbsDown(entry)" icon="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2" ariaLabel="Thumbs Down" [class.text-red-600]="entry.feedback === 'down'" [class.dark:text-red-400]="entry.feedback === 'down'"></pocket-gull-button>
+                                                <pocket-gull-button variant="ghost" size="xs" (click)="actionThumbsUp(entry)" [icon]="ClinicalIcons.Helpful" ariaLabel="Mark as Helpful" [class.text-green-600]="entry.feedback === 'up'" [class.dark:text-green-400]="entry.feedback === 'up'"></pocket-gull-button>
+                                                <pocket-gull-button variant="ghost" size="xs" (click)="actionThumbsDown(entry)" [icon]="ClinicalIcons.Flag" ariaLabel="Flag Issue" [class.text-red-600]="entry.feedback === 'down'" [class.dark:text-red-400]="entry.feedback === 'down'"></pocket-gull-button>
                                             }
                                         </div>
                                     </div>

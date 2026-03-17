@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, computed, inject, ElementRef, ViewChild, AfterContentChecked, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 
@@ -19,17 +19,17 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
       (click)="onClick($event)"
     >
       @if (loading()) {
-        <div class="w-3 h-3 border-2 border-current border-t-transparent rounded-sm animate-spin mr-2"></div>
+        <div class="w-3 h-3 border-2 border-current border-t-transparent rounded-sm animate-spin" [class.mr-2]="hasContent()"></div>
       } @else if (icon()) {
-        <div class="mr-2 flex items-center justify-center h-full" [innerHTML]="iconHtml()"></div>
+        <div class="flex items-center justify-center h-full" [class.mr-2]="hasContent()" [innerHTML]="iconHtml()"></div>
       }
       
-      <span class="flex-grow text-center">
+      <span class="text-center shrink-0" [ngClass]="hasContent() ? 'flex-grow' : 'hidden'" #contentWrapper>
         <ng-content></ng-content>
       </span>
       
       @if (trailingIcon() && !loading()) {
-        <div class="ml-2 flex items-center justify-center h-full" [innerHTML]="trailingIconHtml()"></div>
+        <div class="flex items-center justify-center h-full" [class.ml-2]="hasContent()" [innerHTML]="trailingIconHtml()"></div>
       }
     </button>
   `,
@@ -177,6 +177,12 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
       font-size: 14px;
     }
     
+    /* Icon Only Aspect Ratio Overrides - Touch Friendly Sizes */
+    .icon-only.size-xs { padding: 0.5rem; width: 36px; height: 36px; }
+    .icon-only.size-sm { padding: 0.625rem; width: 44px; height: 44px; }
+    .icon-only.size-md { padding: 0.75rem; width: 52px; height: 52px; }
+    .icon-only.size-lg { padding: 1rem; width: 60px; height: 60px; }
+    
     /* Dark Mode Defaults */
     :host-context(.dark) .btn-primary,
     :host-context(html.dark) .btn-primary {
@@ -248,7 +254,7 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PocketGullButtonComponent {
+export class PocketGullButtonComponent implements AfterContentChecked {
   private sanitizer = inject(DomSanitizer);
 
   variant = input<ButtonVariant>('primary');
@@ -261,6 +267,18 @@ export class PocketGullButtonComponent {
   ariaLabel = input<string>('');
 
   clicked = output<MouseEvent>();
+
+  @ViewChild('contentWrapper') contentWrapper?: ElementRef<HTMLElement>;
+  hasContent = signal<boolean>(false);
+
+  ngAfterContentChecked() {
+    if (this.contentWrapper?.nativeElement) {
+      const content = this.contentWrapper.nativeElement.textContent?.trim() || '';
+      if (this.hasContent() !== (content.length > 0)) {
+        this.hasContent.set(content.length > 0);
+      }
+    }
+  }
 
   private wrapSvgPath(raw: string) {
     if (!raw) return '';
@@ -281,8 +299,9 @@ export class PocketGullButtonComponent {
       'btn-base',
       `btn-${this.variant()}`,
       `size-${this.size()}`,
+      !this.hasContent() ? 'icon-only' : '',
       this.disabled() ? 'disabled' : ''
-    ].join(' ');
+    ].filter(Boolean).join(' ');
   }
 
   onClick(event: MouseEvent) {

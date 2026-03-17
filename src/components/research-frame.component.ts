@@ -307,11 +307,16 @@ export class ResearchFrameComponent {
     // Effect to handle search requests from outside (e.g., analysis report)
     effect(() => {
       const query = this.patientState.requestedResearchQuery();
+      const engine = this.patientState.requestedSearchEngine();
       if (query) {
         untracked(() => {
+          if (engine) {
+            this.searchEngine.set(engine);
+          }
           this.searchText.set(query);
           this.search();
           this.patientState.requestedResearchQuery.set(null);
+          this.patientState.requestedSearchEngine.set(null);
         });
       }
     });

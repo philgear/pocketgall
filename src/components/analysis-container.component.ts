@@ -79,23 +79,12 @@ import { ClinicalIcons } from '../assets/clinical-icons';
             
             <div class="h-6 w-px bg-gray-200 dark:bg-zinc-800 hidden sm:block"></div>
             
-            <div class="hidden sm:block">
-              <h1 class="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-tight">AI Clinical Synthesis</h1>
-              <p class="text-[10px] uppercase font-medium tracking-widest text-gray-500 dark:text-zinc-400">Pocket Gull Intelligence v2.4</p>
-            </div>
-          </div>
-
           <!-- Export Actions & Status -->
           <div class="flex items-center gap-4">
-            @if (hasReport()) {
-              <div class="hidden md:flex items-center gap-2 mr-2">
+            @if (justGenerated() && hasReport() && !intelligence.isLoading()) {
+              <div class="hidden md:flex items-center gap-2 mr-2 animate-in fade-in duration-500">
                  <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                  <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Analysis Complete</span>
-              </div>
-            } @else {
-               <div class="hidden md:flex items-center gap-2 mr-2">
-                 <div class="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></div>
-                 <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Awaiting Data</span>
               </div>
             }
             
@@ -128,7 +117,7 @@ import { ClinicalIcons } from '../assets/clinical-icons';
             <div class="shrink-0 mt-2 pt-6 border-t border-black/10 dark:border-zinc-800 grid grid-cols-1 md:grid-cols-3 gap-6 font-['Inter'] no-print opacity-80 hover:opacity-100 transition-opacity">
               <div class="space-y-1">
                 <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#000000] dark:text-zinc-400">System Identification</div>
-                <div class="text-[10px] font-medium text-black/60 dark:text-zinc-400 uppercase tracking-widest">Pocket Gull Analysis Engine v2.4.0</div>
+                <div class="text-[10px] font-medium text-black/60 dark:text-zinc-400 uppercase tracking-widest">Pocket Gull Analysis Engine v 0.1</div>
               </div>
               <div class="space-y-1">
                 <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#000000] dark:text-zinc-400">Analysis Metadata</div>
@@ -163,8 +152,10 @@ export class AnalysisContainerComponent implements OnInit {
   ClinicalIcons = ClinicalIcons;
 
   hasGeneratedDemo = signal(false);
+  justGenerated = signal(false);
 
   triggerAnalysisGenerate() {
+    this.justGenerated.set(true);
     if (typeof localStorage !== 'undefined') {
       const generations = parseInt(localStorage.getItem('pg_generations') || '0', 10);
       if (generations >= 1) {

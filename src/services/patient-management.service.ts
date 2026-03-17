@@ -194,7 +194,7 @@ const MOCK_PATIENTS: Patient[] = [
           "Bilateral hyperinflation consistent with COPD. No focal consolidation, pneumothorax or pleural effusion. Borderline cardiomegaly.",
         status: "Reviewed",
         imageUrl:
-          "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Chest_xray_mac.jpg/640px-Chest_xray_mac.jpg",
+          "/assets/images/640px-Chest_xray_mac.jpg",
       },
     ],
   },
@@ -344,7 +344,7 @@ const MOCK_PATIENTS: Patient[] = [
           "L4-L5 disc desiccation and mild paracentral disc protrusion without significant canal stenosis. Mild bilateral neural foraminal narrowing.",
         status: "Reviewed",
         imageUrl:
-          "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/MRI_of_the_Lumbar_Spine_%28Sagittal_View%29.jpg/640px-MRI_of_the_Lumbar_Spine_%28Sagittal_View%29.jpg",
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/MRI_of_the_Lumbar_Spine_%28Sagittal_View%29.jpg/960px-MRI_of_the_Lumbar_Spine_%28Sagittal_View%29.jpg",
       },
       {
         id: "scan_002",
@@ -356,7 +356,7 @@ const MOCK_PATIENTS: Patient[] = [
           "Normal alignment. No fracture or acute bony abnormality. Mild degenerative disc disease at L4-L5.",
         status: "Reviewed",
         imageUrl:
-          "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/X-ray_of_the_lumbar_spine_%28lateral_view%29.jpg/640px-X-ray_of_the_lumbar_spine_%28lateral_view%29.jpg",
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/X-ray_of_the_lumbar_spine_%28lateral_view%29.jpg/960px-X-ray_of_the_lumbar_spine_%28lateral_view%29.jpg",
       },
     ],
   },
@@ -538,7 +538,7 @@ const MOCK_PATIENTS: Patient[] = [
           "Mild diffuse age-related volume loss. No acute intracranial hemorrhage or mass effect. Tiny focal areas of chronic microvascular ischemic disease.",
         status: "Reviewed",
         imageUrl:
-          "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/CT_scan_of_the_brain.jpg/640px-CT_scan_of_the_brain.jpg",
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/CT_scan_of_the_brain.jpg/960px-CT_scan_of_the_brain.jpg",
       },
       {
         id: "scan_005",
@@ -550,7 +550,7 @@ const MOCK_PATIENTS: Patient[] = [
           "No acute displaced fracture or dislocation. Degenerative changes in radiocarpal joint.",
         status: "Reviewed",
         imageUrl:
-          "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/X-Ray_of_Colles_Fracture.jpg/640px-X-Ray_of_Colles_Fracture.jpg",
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/X-Ray_of_Colles_Fracture.jpg/960px-X-Ray_of_Colles_Fracture.jpg",
       },
     ],
   },

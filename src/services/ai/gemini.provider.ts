@@ -46,18 +46,41 @@ export class GeminiProvider implements IntelligenceProvider {
                         if (done) break;
 
                         buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n\n');
+                        const lines = buffer.split('\n');
                         buffer = lines.pop() ?? '';
 
                         for (const line of lines) {
-                            if (!line.startsWith('data: ')) continue;
-                            const data = line.slice(6).trim();
-                            if (data === '[DONE]') { subscriber.complete(); return; }
+                            const trimmedLine = line.trim();
+                            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+                            
+                            const data = trimmedLine.slice(6).trim();
+                            if (data === '[DONE]') {
+                                subscriber.complete();
+                                return;
+                            }
+                            
                             try {
                                 const parsed = JSON.parse(data);
-                                if (parsed.error) throw new Error(parsed.error);
-                                if (parsed.text) subscriber.next(parsed.text);
-                            } catch (e: any) { throw e; }
+                                if (parsed.error) {
+                                    throw new Error(typeof parsed.error === 'string' ? parsed.error : JSON.stringify(parsed.error));
+                                }
+                                
+                                // Standard Gemini REST API shape
+                                const geminiText = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+                                if (geminiText) {
+                                    subscriber.next(geminiText);
+                                } else if (parsed.text) {
+                                    // Custom/Legacy wrapper shape
+                                    subscriber.next(parsed.text);
+                                }
+                            } catch (e: any) {
+                                // If it's a JSON parse error but we have multiple data: lines merged (should be fixed by split('\n'))
+                                // or if there's trailing garbage, we catch it here to prevent stream death.
+                                console.error("GeminiProvider: Error parsing SSE chunk", e, data);
+                                // Don't throw if we can't parse one chunk, just log it. 
+                                // Unless it's a real error object from the API.
+                                if (data.includes('"error"')) throw e;
+                            }
                         }
                     }
                     subscriber.complete();
@@ -121,7 +144,18 @@ export class GeminiProvider implements IntelligenceProvider {
         });
         if (!response.ok) throw new Error(await response.text());
         const data = await response.json();
-        return data.text;
+        return data.analysis || data.text; // Support either return shape from backend
+    }
+
+    async analyzeImage(base64Image: string, context?: string): Promise<string> {
+        const response = await fetch('/api/ai/analyze-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base64Image, context })
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const data = await response.json();
+        return data.analysis;
     }
 
 

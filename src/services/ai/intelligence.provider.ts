@@ -40,6 +40,11 @@ export interface IntelligenceProvider {
      */
     analyzeTranslation(original: string, translated: string): Promise<string>;
 
+    /**
+     * Analyzes a medical image (base64) using multi-modal AI.
+     */
+    analyzeImage(base64Image: string, context?: string): Promise<string>;
+
 
     /**
      * Chat Session Management

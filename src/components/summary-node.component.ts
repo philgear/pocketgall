@@ -17,6 +17,7 @@ import { MarkdownService } from '../services/markdown.service';
 import { RichMediaService, RichMediaCard } from '../services/rich-media.service';
 import { Medical3DViewerComponent } from './medical-3d-viewer.component';
 import { SafeHtmlPipe } from '../pipes/safe-html-new.pipe';
+import { PatientStateService } from '../services/patient-state.service';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -129,7 +130,7 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
         /* ─── Hover Toolbar ─────────────────────── */
         .node-toolbar {
             opacity:0;
-            display:flex; flex-direction:row; gap:6px; z-index:20;
+            display:flex; flex-direction:row; gap:6px; z-index:50;
             padding: 0;
             max-height: 0;
             overflow: hidden;
@@ -137,10 +138,18 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
         }
         .node-wrapper:hover .node-toolbar {
             opacity:1;
-            max-height: 40px;
-            padding: 6px 0;
+            max-height: 70px;
+            padding: 10px 0;
             transition-delay: 0s;
             overflow: visible;
+            position: relative;
+            z-index: 60;
+        }
+
+        .node-toolbar ::ng-deep .btn-base.size-sm.icon-only {
+            height: 50px !important;
+            width: 81px !important; /* Golden ratio: 50 * 1.618 = ~81 */
+            border-radius: 8px !important;
         }
 
         /* ─── Inline Chat ────────────────────────── */
@@ -189,14 +198,15 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
             display:flex; align-items:center; justify-content:center; margin-top:1px;
         }
         .inline-bubble {
-            font-size:11.5px; line-height:1.6; color:#374151;
-            background:#FFFFFF; border:1px solid #E5E7EB;
-            border-radius:8px 8px 8px 2px; padding:6px 10px; width: 100%;
+            font-size:12.5px; line-height:1.65; color:#111827;
+            background:#F9FAFB; border:1px solid transparent;
+            box-shadow:0 1px 2px rgba(0,0,0,0.05);
+            border-radius:10px 10px 10px 2px; padding:10px 14px; width: 100%;
             max-width:calc(100% - 30px);
         }
         .inline-msg--user .inline-bubble {
-            background:#1C1C1C; color:#FFFFFF; border-color:transparent;
-            border-radius:8px 8px 2px 8px;
+            background:#1C1C1C; color:#FFFFFF; border-color:transparent; box-shadow:none;
+            border-radius:10px 10px 2px 10px;
         }
 
         /* ─── Claim Units (AI response parsing) ──── */
@@ -338,12 +348,12 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
         .inline-send:disabled { opacity:.35; cursor:not-allowed; }
 
         /* ─── Markdown in bubbles ────────────────── */
-        .inline-bubble h2,.inline-bubble h3,.inline-bubble h4 { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin:8px 0 3px; color:#1C1C1C; }
+        .inline-bubble h2,.inline-bubble h3,.inline-bubble h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; margin:8px 0 3px; color:#111827; }
         .inline-bubble h2:first-child,.inline-bubble h3:first-child,.inline-bubble h4:first-child { margin-top:0; }
-        .inline-bubble p { margin-bottom:4px; }
-        .inline-bubble ul,.inline-bubble ol { padding-left:14px; margin-bottom:4px; }
+        .inline-bubble p { margin-bottom:8px; }
+        .inline-bubble ul,.inline-bubble ol { padding-left:14px; margin-bottom:8px; }
         .inline-bubble li { margin-bottom:2px; }
-        .inline-bubble strong { font-weight:700; color:#1C1C1C; }
+        .inline-bubble strong { font-weight:700; color:#111827; }
         .inline-msg--user .inline-bubble strong { color:#FFFFFF; }
 
         /* ─── Dark Mode Overrides ────────────────── */
@@ -355,7 +365,7 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
         .dark .breadcrumb-item { color: #71717a; }
         .dark .breadcrumb-item:hover { color: #e4e4e7; }
         .dark .breadcrumb-item.active { color: #8bc34a; }
-        .dark .inline-bubble { background: #18181b; border-color: #27272a; color: #e4e4e7; }
+        .dark .inline-bubble { background: #18181b; border-color: transparent; color: #F3F4F6; }
         .dark .inline-msg--user .inline-bubble { background: #fafafa; color: #18181b; }
         .dark .claim-unit:hover { background: #1a2e0530; border-left-color: #8bc34a; }
         .dark .claim-unit--heading { color: #e4e4e7; }
@@ -369,7 +379,7 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
         .dark .inline-input-container { border-top-color: #27272a; background: #09090b; }
         .dark .inline-input { background: #18181b; border-color: #27272a; color: #e4e4e7; }
         .dark .inline-file-chip { background: #27272a; border-color: #3f3f46; color: #e4e4e7; }
-        .dark .inline-bubble h2, .dark .inline-bubble h3, .dark .inline-bubble h4, .dark .inline-bubble strong { color: #e4e4e7; }
+        .dark .inline-bubble h2, .dark .inline-bubble h3, .dark .inline-bubble h4, .dark .inline-bubble strong { color: #F3F4F6; }
         .dark .inline-msg--user .inline-bubble strong { color: #18181b; }
 
         /* Dark mode overrides for new tooltips and popover */
@@ -398,20 +408,23 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
             border-color: #E5E7EB transparent transparent transparent;
         }
 
-        /* ─── Ask Agent Pulse Animation ───────────── */
-        @keyframes subtle-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(104, 159, 56, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(104, 159, 56, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(104, 159, 56, 0); }
+        /* ─── Alternate Nostril Breathing Animation ─ */
+        @keyframes nostril-breathing {
+            0%, 100% { box-shadow: -4px 0 10px -2px rgba(104, 159, 56, 0.4), 4px 0 10px -2px rgba(104, 159, 56, 0); }
+            50% { box-shadow: -4px 0 10px -2px rgba(104, 159, 56, 0), 4px 0 10px -2px rgba(104, 159, 56, 0.4); }
         }
-        .pulse-glow { animation: subtle-pulse 2s infinite; border-color: #689f38 !important; }
-        .dark .pulse-glow { border-color: #8bc34a !important; box-shadow: 0 0 0 0 rgba(139, 195, 74, 0.4); }
-        @keyframes dark-subtle-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(139, 195, 74, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(139, 195, 74, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(139, 195, 74, 0); }
+        @keyframes dark-nostril-breathing {
+            0%, 100% { box-shadow: -4px 0 10px -2px rgba(139, 195, 74, 0.4), 4px 0 10px -2px rgba(139, 195, 74, 0); }
+            50% { box-shadow: -4px 0 10px -2px rgba(139, 195, 74, 0), 4px 0 10px -2px rgba(139, 195, 74, 0.4); }
         }
-        .dark .pulse-glow { animation: dark-subtle-pulse 2s infinite; }
+        .active-breathing {
+            animation: nostril-breathing 5s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+            border-color: rgba(104, 159, 56, 0.3) !important;
+        }
+        .dark .active-breathing {
+            animation: dark-nostril-breathing 5s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+            border-color: rgba(139, 195, 74, 0.3) !important;
+        }
     `],
   template: `
     <div class="relative node-wrapper group/node mb-4"
@@ -436,14 +449,11 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
 
       <!-- ─── Evidence Popover ───────────────── -->
       <div class="evidence-popover no-print">
-        <div class="evidence-label">Clinical Evidence</div>
-        <div class="evidence-hint">
-          @if (node().verificationIssues?.length) {
+        @if (node().verificationIssues?.length) {
+          <div class="evidence-hint">
             {{ node().verificationIssues![0].message }}
-          } @else {
-            Hover to inspect · Click <strong style="color:#fff">Ask Agent</strong> to explore evidence inline.
-          }
-        </div>
+          </div>
+        }
         @if (node().verificationStatus) {
           <div class="evidence-status-row">
             <span class="evidence-status-dot"
@@ -465,9 +475,9 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
       <!-- ─── Hover Toolbar ─────────────────── -->
       <div class="node-toolbar no-print">
         <pocket-gull-button (click)="rejectNode()" variant="ghost" size="sm"
-          class="bg-white dark:bg-zinc-900 shadow-sm border border-gray-200 dark:border-zinc-800" ariaLabel="Reject/Flag"
+          class="bg-white dark:bg-zinc-900 shadow-sm border border-gray-200 dark:border-zinc-800" ariaLabel="Flag Issue"
           [class.text-red-600]="isRejected()"
-          icon="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2">
+          [icon]="ClinicalIcons.Flag">
         </pocket-gull-button>
         <pocket-gull-button (click)="toggleBracket()" variant="ghost" size="sm"
           class="bg-white dark:bg-zinc-900 shadow-sm border border-gray-200 dark:border-zinc-800" ariaLabel="Finalize"
@@ -477,9 +487,17 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
           class="bg-white dark:bg-zinc-900 shadow-sm border border-gray-200 dark:border-zinc-800" ariaLabel="Add Note"
           [icon]="ClinicalIcons.Assessment">
         </pocket-gull-button>
+        <pocket-gull-button (click)="searchPubMed()" variant="ghost" size="sm"
+          class="bg-white dark:bg-zinc-900 shadow-sm border border-gray-200 dark:border-zinc-800" ariaLabel="Search PubMed"
+          [icon]="ClinicalIcons.PubMed">
+        </pocket-gull-button>
+        <pocket-gull-button (click)="searchGoogle()" variant="ghost" size="sm"
+          class="bg-white dark:bg-zinc-900 shadow-sm border border-gray-200 dark:border-zinc-800" ariaLabel="Search Google"
+          [icon]="ClinicalIcons.Google">
+        </pocket-gull-button>
         <pocket-gull-button (click)="toggleChat()" variant="ghost" size="sm"
           class="bg-white dark:bg-zinc-900 shadow-sm border border-gray-200 dark:border-zinc-800"
-          [class.pulse-glow]="!hasDiscoveredEvidenceFocus()"
+          [class.active-breathing]="!hasDiscoveredEvidenceFocus()"
           [class.text-green-600]="!showChat()" [class.text-gray-500]="showChat()"
           [class.dark:text-[#8bc34a]]="!showChat()" [class.dark:text-zinc-400]="showChat()"
           [ariaLabel]="showChat() ? 'Close Agent' : 'Ask Agent'"
@@ -692,17 +710,17 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
                                 <span class="rm-card-title">{{ card.models[0].name }}</span>
                                 <span class="rm-card-badge">3D Model</span>
                               </div>
-                              <div class="rm-model-frame-wrap">
+                              <div class="rm-model-frame-wrap aspect-[1.618/1] w-full relative overflow-hidden rounded-sm">
                                 @defer (on viewport; prefetch on idle) {
                                   <app-medical-3d-viewer 
                                     [threejsId]="card.models[0].threejsId"
                                     [severity]="card.severity"
                                     [afflictionHighlight]="card.afflictionHighlight"
                                     [particles]="card.particles"
-                                    class="rm-model-frame">
+                                    class="rm-model-frame absolute inset-0 w-full h-full">
                                   </app-medical-3d-viewer>
                                 } @placeholder {
-                                  <div class="h-[200px] w-full flex items-center justify-center bg-[#FDFDFD] border border-[#EEEEEE] rounded-sm">
+                                  <div class="absolute inset-0 w-full h-full flex items-center justify-center bg-[#FDFDFD] border border-[#EEEEEE]">
                                     <div class="w-6 h-6 rounded-sm border-2 border-gray-300 border-t-black animate-spin"></div>
                                   </div>
                                 }
@@ -791,8 +809,8 @@ function parseHtmlToClaims(html: string): ClaimUnit[] {
 
                     <!-- Feedback Actions -->
                     <div class="mt-2 flex items-center justify-end gap-2 border-t border-black/5 dark:border-white/5 pt-2">
-                      <pocket-gull-button variant="ghost" size="xs" (click)="actionThumbsUp(msg)" icon="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" ariaLabel="Thumbs Up" [class.text-green-600]="msg.feedback === 'up'" [class.dark:text-green-400]="msg.feedback === 'up'"></pocket-gull-button>
-                      <pocket-gull-button variant="ghost" size="xs" (click)="actionThumbsDown(msg)" icon="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2" ariaLabel="Thumbs Down" [class.text-red-600]="msg.feedback === 'down'" [class.dark:text-red-400]="msg.feedback === 'down'"></pocket-gull-button>
+                      <pocket-gull-button variant="ghost" size="xs" (click)="actionThumbsUp(msg)" [icon]="ClinicalIcons.Helpful" ariaLabel="Mark as Helpful" [class.text-green-600]="msg.feedback === 'up'" [class.dark:text-green-400]="msg.feedback === 'up'"></pocket-gull-button>
+                      <pocket-gull-button variant="ghost" size="xs" (click)="actionThumbsDown(msg)" [icon]="ClinicalIcons.Flag" ariaLabel="Flag Issue" [class.text-red-600]="msg.feedback === 'down'" [class.dark:text-red-400]="msg.feedback === 'down'"></pocket-gull-button>
                     </div>
 
                   </div>
@@ -921,6 +939,7 @@ export class SummaryNodeComponent implements AfterViewChecked {
   private dictation = inject(DictationService);
   private richMedia = inject(RichMediaService);
   private sanitizer = inject(DomSanitizer);
+  private patientState = inject(PatientStateService);
 
   safeEmbedUrl(url: string): SafeResourceUrl {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
@@ -1045,6 +1064,24 @@ export class SummaryNodeComponent implements AfterViewChecked {
     } else {
       this.showChat.set(true);
       if (!this.sessionStarted) { this.sessionStarted = true; this.startInlineSession(); }
+    }
+  }
+
+  // --- External Research Integration ---
+  searchPubMed() {
+    this.executeSearch('pubmed');
+  }
+
+  searchGoogle() {
+    this.executeSearch('google');
+  }
+
+  private executeSearch(engine: 'google' | 'pubmed') {
+    const rawContent = this.type() === 'list-item' ? this.listItemHtml() : this.node().rawHtml;
+    // Strip HTML to get queryable text
+    const textContent = rawContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (textContent) {
+      this.patientState.requestResearchSearch(textContent, engine);
     }
   }
 

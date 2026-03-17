@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, computed, signal, viewChild, ElementRef, afterNextRender, effect, ChangeDetectorRef, untracked, OnDestroy, NgZone } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, signal, viewChild, ElementRef, afterNextRender, effect, ChangeDetectorRef, untracked, OnDestroy, NgZone, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ClinicalIcons } from './assets/clinical-icons';
 import { PatientDropdownComponent } from './components/patient-dropdown.component';
 import { PatientStateService, BODY_PART_NAMES } from './services/patient-state.service';
 import { ResearchFrameComponent } from './components/research-frame.component';
@@ -64,59 +65,120 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
             <div class="origami-pocket"></div>
             
             <!-- The Seagull -->
-            <div class="origami-seagull-container origami-seagull-enter">
-                <div class="origami-paper"></div>
+            <div class="origami-seagull-container origami-seagull-enter"
+                 [class.frightened]="isSeagullFrightened()"
+                 [style.--fly-x.px]="seagullFlyAwayX()"
+                 [style.--fly-y.px]="seagullFlyAwayY()">
+                
+                <!-- 3D Folding Paper -->
+                <div class="origami-paper-3d">
+                    <div class="paper-panel panel-base"></div>
+                    <div class="paper-panel panel-left text-[8px] text-gray-300 font-mono p-1 opacity-50">CLINICAL DATA</div>
+                    <div class="paper-panel panel-right text-[8px] text-gray-300 font-mono p-1 opacity-50 text-right">ASSESSMENT</div>
+                    <div class="paper-panel panel-top"></div>
+                 </div>
+
                 <div class="origami-seagull">
-                    <!-- Origami SVG Seagull shape - Braun minimalist palette -->
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Far Wing -->
-                        <polygon points="50,40 65,15 58,45" fill="#d0d0d0" stroke="#b0b0b0" stroke-width="0.5" stroke-linejoin="round" />
-                        <!-- Tail -->
-                        <polygon points="20,50 50,40 10,35" fill="#e0e0e0" stroke="#d0d0d0" stroke-width="0.5" stroke-linejoin="round" />
-                        <!-- Body Base -->
-                        <polygon points="20,50 50,40 58,45 75,55 50,65" fill="#f4f4f4" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round" />
-                        <!-- Near Wing (Upper) -->
-                        <polygon points="50,40 58,45 35,85" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round" />
-                        <!-- Near Wing (Fold) -->
-                        <polygon points="50,40 35,85 20,50" fill="#f9f9f9" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round" />
-                        <!-- Neck/Head -->
-                        <polygon points="75,55 58,45 85,38" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round" />
-                        <!-- Beak - Functional Braun Orange Accent -->
-                        <polygon points="85,38 82,45 95,34" fill="#ff4500" stroke="#df3d00" stroke-width="0.5" stroke-linejoin="round" />
+                    <!-- Rotation wrapper for mouse tracking -->
+                    <div [style.transform]="'rotate(' + seagullAngle() + 'deg)'" class="w-full h-full transition-transform duration-200 ease-out origin-center">
+                    <!-- Mathematical Sierpiński & Golden Ratio Seagull -->
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="text-[#1C1C1C] dark:text-zinc-100">
+                        <!-- Mathematical Construction Framework -->
+                        <g stroke="currentColor" stroke-width="0.1" fill="none" opacity="0.15" stroke-dasharray="1 2">
+                            <!-- Golden Ratio Circles (phi = 1.618) -->
+                            <circle cx="50" cy="50" r="10" />
+                            <circle cx="50" cy="50" r="16.18" />
+                            <circle cx="50" cy="50" r="26.18" />
+                            <circle cx="50" cy="50" r="42.36" />
+                            <!-- Center Axes -->
+                            <line x1="0" y1="50" x2="100" y2="50" />
+                            <line x1="50" y1="0" x2="50" y2="100" />
+                            <!-- Fibonacci Spiral Approximation -->
+                            <path d="M50,40 A10,10 0 0,1 60,50 A16.18,16.18 0 0,1 43.82,66.18 A26.18,26.18 0 0,1 17.64,40 A42.36,42.36 0 0,1 60,-2.36" />
+                        </g>
+
+                        <!-- Sierpiński & Golden Ratio Seagull Geometry -->
+                        <g stroke="currentColor" stroke-width="0.4" fill="none" stroke-linejoin="round">
+                            <!-- Body: Central Golden Triangle (approx) -->
+                            <polygon points="50,20 65,70 35,70" fill="currentColor" fill-opacity="0.03" />
+                            <line x1="50" y1="20" x2="50" y2="70" stroke-width="0.2" opacity="0.5" />
+                            <line x1="35" y1="45" x2="65" y2="45" stroke-width="0.2" opacity="0.5" />
+
+                            <!-- Left Wing (Sierpiński Depth 3) -->
+                            <polygon points="50,20 5,40 40,75" />
+                            <!-- Depth 1 Cutout -->
+                            <polygon points="27.5,30 22.5,57.5 45,47.5" fill="currentColor" fill-opacity="0.05" />
+                            <line x1="50" y1="20" x2="22.5" y2="57.5" stroke-width="0.15" />
+                            <line x1="5" y1="40" x2="45" y2="47.5" stroke-width="0.15" />
+                            <!-- Depth 2 Cutouts -->
+                            <polygon points="38.75,25 36.25,38.75 47.5,33.75" fill="currentColor" fill-opacity="0.08" />
+                            <polygon points="16.25,35 25,43.75 13.75,48.75" fill="currentColor" fill-opacity="0.08" />
+                            <polygon points="31.25,66.25 33.75,52.5 42.5,61.25" fill="currentColor" fill-opacity="0.08" />
+
+                            <!-- Right Wing (Sierpiński Depth 3) -->
+                            <polygon points="50,20 95,40 60,75" />
+                            <!-- Depth 1 Cutout -->
+                            <polygon points="72.5,30 77.5,57.5 55,47.5" fill="currentColor" fill-opacity="0.05" />
+                            <line x1="50" y1="20" x2="77.5" y2="57.5" stroke-width="0.15" />
+                            <line x1="95" y1="40" x2="55" y2="47.5" stroke-width="0.15" />
+                            <!-- Depth 2 Cutouts -->
+                            <polygon points="61.25,25 63.75,38.75 52.5,33.75" fill="currentColor" fill-opacity="0.08" />
+                            <polygon points="83.75,35 75,43.75 86.25,48.75" fill="currentColor" fill-opacity="0.08" />
+                            <polygon points="68.75,66.25 66.25,52.5 57.5,61.25" fill="currentColor" fill-opacity="0.08" />
+
+                            <!-- Tail Geometry -->
+                            <polygon points="35,70 65,70 50,90" />
+                            <polygon points="42.5,70 57.5,70 50,80" fill="currentColor" fill-opacity="0.05" />
+
+                            <!-- Head & Beak Array (Angular extension) -->
+                            <polygon points="50,20 45,10 55,10" />
+                            <!-- Functional Braun Orange Accent Beak -->
+                            <polygon points="55,10 70,5 50,5" stroke="#ff4500" fill="#ff4500" fill-opacity="0.8" stroke-width="0.3" />
+                            <line x1="50" y1="20" x2="70" y2="5" stroke-width="0.2" opacity="0.3" />
+                        </g>
+
+                        <!-- Mathematical Annotations (Tiny text) -->
+                        <g fill="currentColor" opacity="0.4" font-family="monospace" font-size="2.5" transform="scale(0.8) translate(10, 15)">
+                            <text x="50" y="20">φ = 1.618</text>
+                            <text x="5" y="45">f(x) = x² + y²</text>
+                            <text x="80" y="45">S_n = 3^n</text>
+                            <text x="50" y="95">lim_{n→∞}</text>
+                        </g>
                     </svg>
+                    </div>
                 </div>
             </div>
           </div>
           <h1 class="text-xl font-bold mb-1 uppercase tracking-[0.2em] text-[#1C1C1C] dark:text-zinc-100">Pocket Gull</h1>
           <p class="text-gray-500 dark:text-zinc-400 mb-8 text-xs uppercase tracking-widest">Clinical Intelligence Platform</p>
 
-          <!-- API Key Input -->
-          <div class="w-full max-w-sm">
-            <p class="text-gray-500 dark:text-zinc-400 mb-4 text-sm">Enter your Gemini API key to access the live practitioner dashboard.</p>
-            <div class="relative flex items-center border border-gray-200 dark:border-zinc-800 rounded focus-within:border-gray-400 dark:focus-within:border-zinc-600 transition-colors mb-2">
-              <input
-                id="api-key-input"
-                [(ngModel)]="apiKeyInput"
-                [type]="showPassword() ? 'text' : 'password'"
-                placeholder="Paste your Gemini API key here"
-                class="flex-1 px-4 py-3 text-sm bg-transparent outline-none font-mono text-gray-800 dark:text-zinc-100 placeholder-gray-300 dark:placeholder-zinc-600"
-                (keydown.enter)="submitApiKey()"
-              />
-              <button (click)="showPassword.update(v => !v)" class="px-3 text-gray-500 dark:text-zinc-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" [attr.aria-label]="showPassword() ? 'Hide key' : 'Show key'">
-                @if (showPassword()) {
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                } @else {
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                }
+            <!-- API Key Input -->
+            <div class="w-full max-w-sm relative z-40" id="seagull-safe-zone">
+              <p class="text-gray-500 dark:text-zinc-400 mb-4 text-sm">Enter your Gemini API key to access the live practitioner dashboard.</p>
+              <div class="relative flex items-center border border-gray-200 dark:border-zinc-800 rounded focus-within:border-gray-400 dark:focus-within:border-zinc-600 transition-colors mb-2">
+                <input
+                  id="api-key-input"
+                  [(ngModel)]="apiKeyInput"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  placeholder="Paste your Gemini API key here"
+                  class="flex-1 px-4 py-3 text-sm bg-transparent outline-none font-mono text-gray-800 dark:text-zinc-100 placeholder-gray-300 dark:placeholder-zinc-600"
+                  (keydown.enter)="submitApiKey()"
+                />
+                <button (click)="showPassword.update(v => !v)" class="px-3 text-gray-500 dark:text-zinc-400 hover:text-gray-600 dark:hover:text-zinc-300 transition-colors" [attr.aria-label]="showPassword() ? 'Hide key' : 'Show key'">
+                  @if (showPassword()) {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  }
+                </button>
+              </div>
+              @if (apiKeyError()) {
+                <p class="text-red-500 text-xs mb-3">{{ apiKeyError() }}</p>
+              }
+              <button (click)="submitApiKey()" [disabled]="!apiKeyInput().trim()"
+                class="w-full py-3 bg-[#1C1C1C] dark:bg-zinc-100 text-white dark:text-[#09090b] text-xs font-bold uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all disabled:opacity-40 disabled:cursor-not-allowed mb-3">
+                Enter Dashboard
               </button>
-            </div>
-            @if (apiKeyError()) {
-              <p class="text-red-500 text-xs mb-3">{{ apiKeyError() }}</p>
-            }
-            <button (click)="submitApiKey()" [disabled]="!apiKeyInput().trim()"
-              class="w-full py-3 bg-[#1C1C1C] dark:bg-zinc-100 text-white dark:text-[#09090b] text-xs font-bold uppercase tracking-widest hover:bg-black dark:hover:bg-white transition-all disabled:opacity-40 disabled:cursor-not-allowed mb-3">
-              Enter Dashboard
-            </button>
             <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener"
               class="block text-xs text-[#416B1F] dark:text-[#689f38] hover:text-[#244626] dark:hover:text-[#8bc34a] transition-colors mb-8">
               Get an API key at <span class="font-bold">ai.dev</span> →
@@ -501,44 +563,74 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
             </pocket-gull-button>
           </div>
           <div class="flex-1 overflow-y-auto p-6 bg-white dark:bg-[#09090b] relative">
-             <div class="mb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
-                <h3 class="block text-xs font-bold text-[#689F38] uppercase tracking-[0.15em]">Final Care Plan Document</h3>
-                <div class="flex flex-col gap-1.5 w-full sm:w-auto mt-3 sm:mt-0">
-                  <span class="text-[10px] font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-widest mb-0.5">Cognitive Level</span>
-                  <div class="flex flex-wrap bg-[#f4f4f5] dark:bg-zinc-900 p-1 rounded-lg border border-gray-200 dark:border-zinc-800 w-fit gap-1">
+              <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex flex-col gap-1">
+                  <h3 class="block text-[10px] font-bold text-[#689F38] uppercase tracking-[0.2em]">Care Plan Finalization</h3>
+                  <p class="text-[10px] text-gray-500 lowercase font-medium italic">Adjust cognition level for patient understanding</p>
+                </div>
+                
+                <div class="flex flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                  <div class="flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-inner w-full sm:w-fit">
                     <button 
                       (click)="changeReadingLevel('standard')"
                       [disabled]="isTranslating()"
-                      class="px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-md transition-all duration-200 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-[#689F38]"
-                      [ngClass]="selectedReadingLevel() === 'standard' ? 'bg-white dark:bg-zinc-800 text-[#689F38] shadow-sm' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200'">
+                      class="flex-1 sm:flex-none px-4 py-2 text-[10px] uppercase tracking-widest font-bold rounded-lg transition-all duration-300 disabled:opacity-50"
+                      [ngClass]="selectedReadingLevel() === 'standard' ? 'bg-white dark:bg-zinc-800 text-[#689F38] shadow-sm transform scale-[1.02]' : 'text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300'">
                       Standard
                     </button>
                     <button 
                       (click)="changeReadingLevel('simplified')"
                       [disabled]="isTranslating()"
-                      class="px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-md transition-all duration-200 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-[#689F38]"
-                      [ngClass]="selectedReadingLevel() === 'simplified' ? 'bg-white dark:bg-zinc-800 text-[#689F38] shadow-sm' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200'">
+                      class="flex-1 sm:flex-none px-4 py-2 text-[10px] uppercase tracking-widest font-bold rounded-lg transition-all duration-300 disabled:opacity-50"
+                      [ngClass]="selectedReadingLevel() === 'simplified' ? 'bg-white dark:bg-zinc-800 text-[#689F38] shadow-sm transform scale-[1.02]' : 'text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300'">
                       Simplified
                     </button>
                     <button 
                       (click)="changeReadingLevel('dyslexia')"
                       [disabled]="isTranslating()"
-                      class="px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-md transition-all duration-200 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-[#689F38]"
-                      [ngClass]="selectedReadingLevel() === 'dyslexia' ? 'bg-white dark:bg-zinc-800 text-[#689F38] shadow-sm' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200'">
+                      class="flex-1 sm:flex-none px-4 py-2 text-[10px] uppercase tracking-widest font-bold rounded-lg transition-all duration-300 disabled:opacity-50"
+                      [ngClass]="selectedReadingLevel() === 'dyslexia' ? 'bg-white dark:bg-zinc-800 text-[#689F38] shadow-sm transform scale-[1.02]' : 'text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300'">
                       Cognition
                     </button>
                     <button 
                       (click)="changeReadingLevel('child')"
                       [disabled]="isTranslating()"
-                      class="px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold rounded-md transition-all duration-200 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-[#689F38]"
-                      [ngClass]="selectedReadingLevel() === 'child' ? 'bg-white dark:bg-zinc-800 text-[#689F38] shadow-sm' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200'">
+                      class="flex-1 sm:flex-none px-4 py-2 text-[10px] uppercase tracking-widest font-bold rounded-lg transition-all duration-300 disabled:opacity-50"
+                      [ngClass]="selectedReadingLevel() === 'child' ? 'bg-white dark:bg-zinc-800 text-[#689F38] shadow-sm transform scale-[1.02]' : 'text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300'">
                       Pediatric
                     </button>
                   </div>
                 </div>
-             </div>
+              </div>
+
+              <!-- PRINT STRATEGY OPTIONS -->
+              @if (selectedReadingLevel() !== 'standard') {
+                <div class="mb-6 animate-in fade-in slide-in-from-top-2 duration-500">
+                  <div class="flex flex-wrap items-center gap-6 p-4 bg-zinc-50 dark:bg-zinc-900/40 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                    <div class="flex items-center gap-3">
+                      <div class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" [checked]="includeAnalysisInPrint()" (change)="toggleAnalysisInPrint()" class="sr-only peer">
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-zinc-600 peer-checked:bg-[#689F38]"></div>
+                      </div>
+                      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Include AI Analysis</span>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                      <div class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" [checked]="includeOriginalInPrint()" (change)="toggleOriginalInPrint()" class="sr-only peer">
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-zinc-600 peer-checked:bg-[#689F38]"></div>
+                      </div>
+                      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Include Original</span>
+                    </div>
+                    
+                    <div class="ml-auto text-[9px] text-[#689F38] font-mono uppercase tracking-tighter opacity-60">
+                      Strategy: {{ includeAnalysisInPrint() && includeOriginalInPrint() ? 'Full Composite' : 'Selective' }}
+                    </div>
+                  </div>
+                </div>
+              }
              
-             <div class="relative grid gap-4 transition-all duration-300" [class.grid-cols-1]="selectedReadingLevel() === 'standard'" [class.sm:grid-cols-2]="selectedReadingLevel() !== 'standard'">
+              <div class="relative grid gap-4 transition-all duration-300" [class.grid-cols-1]="selectedReadingLevel() === 'standard'" [class.sm:grid-cols-2]="selectedReadingLevel() !== 'standard'">
                
                @if (selectedReadingLevel() !== 'standard') {
                  <div class="flex flex-col gap-1.5 animate-in fade-in slide-in-from-left-4 duration-300">
@@ -551,6 +643,18 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
                       [disabled]="isTranslating()"
                       placeholder="No Active Care Plan recorded for this visit."
                       class="w-full">
+                    </pocket-gull-input>
+                 </div>
+               } @else {
+                 <div class="flex flex-col gap-1.5 opacity-50">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Original Active Care Plan</label>
+                    <pocket-gull-input
+                      type="textarea"
+                      [rows]="8"
+                      [value]="originalPreviewText()"
+                      [disabled]="true"
+                      placeholder="No Active Care Plan recorded for this visit."
+                      class="w-full h-full">
                     </pocket-gull-input>
                  </div>
                }
@@ -658,10 +762,10 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
         </div>
       </div>
     }
-
-      </main>
-    }
-  </div>
+    
+        </main>
+      }
+    </div>
   }
   `,
   styles: [`
@@ -707,6 +811,12 @@ export class AppComponent implements OnDestroy {
   translationError = signal<string | null>(null);
   includeAnalysisInPrint = signal<boolean>(true);
   includeOriginalInPrint = signal<boolean>(true);
+
+  // Seagull Interactivity State
+  seagullAngle = signal<number>(0);
+  isSeagullFrightened = signal<boolean>(false);
+  seagullFlyAwayX = signal<number>(0);
+  seagullFlyAwayY = signal<number>(0);
 
   // Navbar Dropdown States
   exportMenuOpen = signal(false);
@@ -813,6 +923,81 @@ export class AppComponent implements OnDestroy {
     alert("Upload data modal placeholder");
   }
 
+  // Window/Event listeners for Seagull interactivity
+  @HostListener('window:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (this.hasApiKey() || this.isSeagullFrightened() || typeof window === 'undefined') return;
+
+    // Approximate center of the seagull based on layout (adjust if needed)
+    const birdElement = document.querySelector('.origami-seagull-container');
+    if (!birdElement) return;
+    const birdRect = birdElement.getBoundingClientRect();
+
+    const birdCenterX = birdRect.left + (birdRect.width / 2);
+    const birdCenterY = birdRect.top + (birdRect.height / 2);
+
+    const mouseX = event.clientX;
+    const mouseY = event.clientY;
+
+    // Calculate angle towards mouse
+    const deltaX = mouseX - birdCenterX;
+    const deltaY = mouseY - birdCenterY;
+    
+    // Angle in degrees
+    let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+    // Add offset so the beak points toward the cursor instead of the top wing
+    this.seagullAngle.set(angle + 45); 
+
+    // Distance to trigger fly away
+    const distance = Math.hypot(deltaX, deltaY);
+    
+    // Check if mouse is over safe zone (API key input box)
+    const safeZone = document.getElementById('seagull-safe-zone');
+    let isSafe = false;
+    if (safeZone) {
+      const safeRect = safeZone.getBoundingClientRect();
+      isSafe = (mouseX >= safeRect.left - 50 && mouseX <= safeRect.right + 50 &&
+                mouseY >= safeRect.top - 50 && mouseY <= safeRect.bottom + 50);
+    }
+
+    if (distance < 120 && !isSafe) {
+      this.triggerFrightenedFlight(mouseX, mouseY);
+    }
+  }
+
+  // Touch support for interactivity
+  @HostListener('window:touchmove', ['$event'])
+  onTouchMove(event: TouchEvent) {
+    if (event.touches.length > 0) {
+      this.onMouseMove(event.touches[0] as unknown as MouseEvent);
+    }
+  }
+
+  private triggerFrightenedFlight(mouseX: number, mouseY: number) {
+     this.isSeagullFrightened.set(true);
+     // Fly away in opposite direction of mouse
+     const birdElement = document.querySelector('.origami-seagull-container');
+     if (birdElement) {
+         const birdRect = birdElement.getBoundingClientRect();
+         const dx = birdRect.left - mouseX;
+         const dy = birdRect.top - mouseY;
+         
+         // Normalize and scale up for fly-away distance
+         const mag = Math.hypot(dx, dy) || 1;
+         // Send bird flying rapidly off screen
+         this.seagullFlyAwayX.set((dx / mag) * window.innerWidth * 1.5);
+         this.seagullFlyAwayY.set((dy / mag) * window.innerHeight * 1.5 - 500); // go upward usually
+     }
+     
+     // Optionally reset after 5 seconds to try again
+     setTimeout(() => {
+        this.isSeagullFrightened.set(false);
+        this.seagullFlyAwayX.set(0);
+        this.seagullFlyAwayY.set(0);
+        this.seagullAngle.set(0);
+     }, 4000);
+  }
+
   openFinalizePreview() {
     let plan = this.state.activePatientSummary();
     if (!plan) {
@@ -842,37 +1027,37 @@ export class AppComponent implements OnDestroy {
     const draftItems = this.state.draftSummaryItems();
     if (draftItems.length > 0) {
       const newContent = draftItems.map(item => `- ${item.text}`).join('\n');
-      plan = plan ? `${plan}\n\n### Draft Notes\n${newContent}` : `### Draft Notes\n${newContent}`;
+      plan = plan ? `${plan}\n\n### ${ClinicalIcons.Suggestion} Draft Notes\n${newContent}` : `### ${ClinicalIcons.Suggestion} Draft Notes\n${newContent}`;
     }
 
     const checklist = this.state.checklist();
     if (checklist.length > 0) {
       const clContent = checklist.map(item => `- [${item.completed ? 'x' : ' '}] ${item.text}`).join('\n');
-      plan = plan ? `${plan}\n\n### Care Plan Instructions\n${clContent}` : `### Care Plan Instructions\n${clContent}`;
+      plan = plan ? `${plan}\n\n### ${ClinicalIcons.Assessment} Care Plan Instructions\n${clContent}` : `### ${ClinicalIcons.Assessment} Care Plan Instructions\n${clContent}`;
     }
 
     const dynamicNutrients = this.state.dynamicNutrients();
     if (dynamicNutrients.length > 0) {
       const tnContent = dynamicNutrients.map(item => `- **${item.name}**: ${item.value}`).join('\n');
-      plan = plan ? `${plan}\n\n### Targeted Nutrients\n${tnContent}` : `### Targeted Nutrients\n${tnContent}`;
+      plan = plan ? `${plan}\n\n### ${ClinicalIcons.Risk} Targeted Nutrients\n${tnContent}` : `### ${ClinicalIcons.Risk} Targeted Nutrients\n${tnContent}`;
     }
 
     const oxStress = this.state.oxidativeStressMarkers();
     if (oxStress.length > 0) {
       const oxContent = oxStress.map(item => `- **${item.name}**: ${item.value}`).join('\n');
-      plan = plan ? `${plan}\n\n### Oxidative Stress Markers\n${oxContent}` : `### Oxidative Stress Markers\n${oxContent}`;
+      plan = plan ? `${plan}\n\n### ${ClinicalIcons.EvidenceFocus} Oxidative Stress Markers\n${oxContent}` : `### ${ClinicalIcons.EvidenceFocus} Oxidative Stress Markers\n${oxContent}`;
     }
 
     const antiox = this.state.antioxidantSources();
     if (antiox.length > 0) {
       const antioxContent = antiox.map(item => `- **${item.name}**: ${item.value}`).join('\n');
-      plan = plan ? `${plan}\n\n### Antioxidant Sources\n${antioxContent}` : `### Antioxidant Sources\n${antioxContent}`;
+      plan = plan ? `${plan}\n\n### ${ClinicalIcons.FollowUp} Antioxidant Sources\n${antioxContent}` : `### ${ClinicalIcons.FollowUp} Antioxidant Sources\n${antioxContent}`;
     }
 
     const meds = this.state.medications();
     if (meds.length > 0) {
       const medsContent = meds.map(item => `- **${item.name}**: ${item.value}`).join('\n');
-      plan = plan ? `${plan}\n\n### Medications\n${medsContent}` : `### Medications\n${medsContent}`;
+      plan = plan ? `${plan}\n\n### ${ClinicalIcons.Medication} Medications\n${medsContent}` : `### ${ClinicalIcons.Medication} Medications\n${medsContent}`;
     }
     
     const finalText = plan || 'No Active Patient Summary recorded for this visit.';
@@ -911,13 +1096,20 @@ export class AppComponent implements OnDestroy {
       await this.analyzeCurrentTranslation();
     } catch (error) {
       console.error("Translation failed", error);
-      this.translationError.set("Failed to translate plan. Please try again or check your connection.");
-      if (this.previewText().trim() === '') {
-        this.previewText.set(this.originalPreviewText());
-      }
+      this.translationError.set("Failed to translate plan. Please retry.");
+      // NOTE: We no longer revert selectedReadingLevel to 'standard' here
+      // This allows the user to see the error state on the selected level.
     } finally {
       this.isTranslating.set(false);
     }
+  }
+
+  toggleAnalysisInPrint() {
+    this.includeAnalysisInPrint.update(v => !v);
+  }
+
+  toggleOriginalInPrint() {
+    this.includeOriginalInPrint.update(v => !v);
   }
 
   async analyzeCurrentTranslation() {
@@ -957,12 +1149,13 @@ export class AppComponent implements OnDestroy {
       if (this.includeAnalysisInPrint()) {
         const analysis = this.translationAnalysis();
         if (analysis) {
-          compositePlan += `---\n\n### AI Translation Analysis\n${analysis}\n\n`;
+          compositePlan += `### AI Translation Analysis\n${analysis}\n\n`;
+          compositePlan += `---\n\n`;
         }
       }
 
       if (this.includeOriginalInPrint()) {
-        compositePlan += `---\n\n### Original Clinical Plan (Provider Reference)\n${this.originalPreviewText()}`;
+        compositePlan += `### Original Clinical Plan (Provider Reference)\n${this.originalPreviewText()}`;
       }
       
       textToPrint = compositePlan;

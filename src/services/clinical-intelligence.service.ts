@@ -276,6 +276,7 @@ If a section has no relevant source data, output the heading followed by: "*No s
                 } catch (e: any) {
                     console.error(`Error in lens ${lens}`, e);
                     newReport[lens] = `### Error\nAn error occurred in this section: ${e?.message ?? e}`;
+                    this.verificationResults.update(all => ({ ...all, [lens]: undefined }));
                 }
             });
 
@@ -373,6 +374,20 @@ If a section has no relevant source data, output the heading followed by: "*No s
             const errorMsg = String(e?.message ?? e);
             this.error.set(errorMsg);
             throw new Error(`Analysis failed: ${errorMsg}`);
+        } finally {
+            this.isLoading.set(false);
+        }
+    }
+
+    async analyzeRadiologyImage(base64Image: string, context?: string): Promise<string> {
+        this.isLoading.set(true);
+        this.error.set(null);
+        try {
+            return await this.ai.analyzeImage(base64Image, context);
+        } catch (e: any) {
+            const errorMsg = String(e?.message ?? e);
+            this.error.set(errorMsg);
+            throw new Error(`Image analysis failed: ${errorMsg}`);
         } finally {
             this.isLoading.set(false);
         }

@@ -113,6 +113,9 @@ async function getApiKey(): Promise<string> {
   return fetchPromise;
 }
 
+// Prefetch the API key at boot to ensure all lazy loaded APIs have process.env populated
+await getApiKey().catch(console.error);
+
 // Security headers
 app.use((req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
@@ -120,6 +123,8 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   next();
 });
+
+import { dicomRouter } from './server/dicom';
 
 // PubMed Proxy 
 app.get('/api/pubmed/search', async (req, res) => {
@@ -135,6 +140,8 @@ app.get('/api/pubmed/search', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.use('/api/dicom', dicomRouter);
 
 app.get('/api/pubmed/summary', async (req, res) => {
   try {
@@ -193,14 +200,40 @@ app.post('/api/ai/translate', express.json(), async (req, res) => {
 
 app.post('/api/ai/analyze-translation', express.json(), async (req, res) => {
   try {
-      const { analyzeTranslationFlow } = await import('./server/genkit.js');
-      const result = await analyzeTranslationFlow({
-          original: req.body.original,
-          translated: req.body.translated
-      });
-      res.json({ text: result });
-  } catch(e: any) {
-      res.status(500).json({error: e.message});
+    const { original, translated } = req.body;
+    await getApiKey(); // Ensure the key is loaded into process.env before Genkit initializes
+
+    if (!original || !translated) {
+      return res.status(400).json({ error: 'Original and translated text are required' });
+    }
+
+    const { analyzeTranslationFlow } = await import('./server/genkit.js');
+    const result = await analyzeTranslationFlow({ original, translated });
+
+    res.json({ analysis: result });
+
+  } catch (error) {
+    console.error('Error analyzing translation:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+app.post('/api/ai/analyze-image', express.json({ limit: '10mb' }), async (req, res) => {
+  try {
+    const { base64Image, context } = req.body;
+    await getApiKey();
+
+    if (!base64Image) {
+      return res.status(400).json({ error: 'base64Image is required' });
+    }
+
+    const { analyzeImageFlow } = await import('./server/genkit.js');
+    const result = await analyzeImageFlow({ base64Image, context });
+
+    res.json({ analysis: result });
+  } catch (error) {
+    console.error('Error analyzing image:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
