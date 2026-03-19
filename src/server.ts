@@ -178,6 +178,29 @@ app.use((req, res, next) => {
   next();
 });
 
+// IAP Identity Verification Middleware
+app.use(async (req, res, next) => {
+  // Bypass for local development and basic health checks
+  if ((process.env['NODE_ENV'] !== 'production' && !process.env['K_SERVICE']) || req.path === '/health') {
+    return next();
+  }
+
+  const iapJwt = req.header('x-goog-iap-jwt-assertion');
+  const iapEmail = req.header('x-goog-authenticated-user-email');
+
+  if (!iapJwt && process.env['REQUIRE_IAP'] === 'true') {
+    console.warn(`[Security] Blocked unauthenticated access attempt from ${req.ip}`);
+    return res.status(401).send('Unauthorized: Zero-Trust Network Access Required');
+  }
+
+  if (iapEmail) {
+    // Pass downstream for audit logging
+    req.headers['x-user-identity'] = iapEmail;
+  }
+
+  next();
+});
+
 import { dicomRouter } from './server/dicom';
 import { healthcareRouter, ensureHealthcareStoresExist } from './server/healthcare.js';
 

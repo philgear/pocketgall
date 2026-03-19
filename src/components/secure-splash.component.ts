@@ -64,28 +64,19 @@ import { PocketGullButtonComponent } from './shared/pocket-gull-button.component
 
           <!-- PIN Unlock Flow -->
           @if (isLocked()) {
-            <form (submit)="handleUnlock(); $event.preventDefault();" class="relative mb-4">
-              <input 
-                #pinInput
-                type="password"
-                name="pin"
-                autocomplete="current-password"
-                [(ngModel)]="pin"
-                placeholder="PIN ('1234')" 
-                autofocus
-                class="w-full px-4 py-3 text-center text-lg tracking-[0.3em] font-mono bg-white/70 dark:bg-zinc-900/60 backdrop-blur-sm border border-white/50 dark:border-zinc-700 rounded-[1rem] shadow-inner outline-none focus:border-[#1E3A5F] dark:focus:border-white transition-colors text-gray-900 dark:text-zinc-100 placeholder:tracking-normal placeholder:text-xs placeholder:font-sans"
-              />
-              @if (errorMsg()) {
-                <p class="absolute -bottom-6 left-0 right-0 text-red-500 text-[10px] uppercase font-bold tracking-widest text-center">{{ errorMsg() }}</p>
-              }
-            </form>
-
-            <button 
-              (click)="handleUnlock()" 
-              [disabled]="!pin().trim() || isChecking()"
-              class="w-full mt-3 py-3 bg-[#1C1C1C] dark:bg-white text-white dark:text-[#09090b] text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-black dark:hover:bg-gray-200 transition-all rounded-[1rem] disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_10px_20px_rgba(0,0,0,0.1)] active:translate-y-[1px] active:shadow-sm">
-              {{ isChecking() ? 'Verifying...' : 'Unlock Terminal' }}
-            </button>
+            <div class="flex flex-col items-center justify-center py-6">
+               <!-- Biometric Icons (Fingerprint/Face) -->
+               <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-[#1E3A5F] dark:text-white mb-6 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+               <button 
+                 (click)="handleUnlock()" 
+                 [disabled]="isChecking()"
+                 class="w-full py-4 bg-[#1C1C1C] dark:bg-white text-white dark:text-[#09090b] text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-black dark:hover:bg-gray-200 transition-all rounded-[1rem] disabled:opacity-30 disabled:cursor-not-allowed shadow-md active:translate-y-[1px]">
+                 {{ isChecking() ? 'Verifying Native Identity...' : 'Local Biometric Unlock' }}
+               </button>
+               @if (errorMsg()) {
+                 <p class="mt-4 text-red-500 text-[10px] uppercase font-bold tracking-widest text-center">{{ errorMsg() }}</p>
+               }
+            </div>
           } 
           <!-- API Key Setup Flow -->
           @else {
@@ -189,20 +180,15 @@ export class SecureSplashComponent {
     });
   }
 
-  handleUnlock() {
-    if (!this.pin().trim()) return;
+  async handleUnlock() {
     this.isChecking.set(true);
     this.errorMsg.set('');
 
-    setTimeout(() => {
-      const success = this.session.unlock(this.pin());
-      if (!success) {
-        this.errorMsg.set('Invalid PIN code.');
-        this.pin.set('');
-        this.pinInputRef()?.nativeElement?.focus();
-      }
-      this.isChecking.set(false);
-    }, 600);
+    const success = await this.session.unlock();
+    if (!success) {
+      this.errorMsg.set('Biometric verification failed or was cancelled.');
+    }
+    this.isChecking.set(false);
   }
 
   handleSubmitKey() {

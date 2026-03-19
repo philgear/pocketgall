@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +10,7 @@ export class SessionStateService {
    * Defaulting to true so they must "login" on boot.
    */
   readonly isLocked = signal(true);
+  private auth = inject(AuthService);
 
   /**
    * Represents the inactivity timer in seconds.
@@ -20,8 +22,9 @@ export class SessionStateService {
     this.resetIdleTimer();
   }
 
-  unlock(pin: string): boolean {
-    if (pin === '1234') { // Simulated Auth Check
+  async unlock(): Promise<boolean> {
+    const success = await this.auth.promptLocalBiometric();
+    if (success) {
       this.isLocked.set(false);
       this.resetIdleTimer();
       return true;

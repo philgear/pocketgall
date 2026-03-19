@@ -35,6 +35,12 @@ Pocket-Gull is a real-time medical Care Plan Strategy and Live AI Consult engine
 - To verify a build, execute `npm run build`.
 - Deployment is to Google Cloud Run via `npm run deploy`.
 
+## Brand & Visual Identity
+- **Pocket Gull Logo (Origami Seagull)**: Always rigorously adhere to the following SVG structure for the Pocket Gull brand logo. *(Note: Strip off compiled `_ngcontent` context tags when injecting into fresh Angular components to respect pristine View Encapsulation).*
+```html
+<svg width="42" height="42" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="shrink-0"><polygon points="50,40 65,15 58,45" fill="#d0d0d0" stroke="#b0b0b0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="20,50 50,40 10,35" fill="#e0e0e0" stroke="#d0d0d0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="20,50 50,40 58,45 75,55 50,65" fill="#f4f4f4" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="50,40 58,45 35,85" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="50,40 35,85 20,50" fill="#f9f9f9" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="75,55 58,45 85,38" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="85,38 82,45 95,34" fill="#ff4500" stroke="#df3d00" stroke-width="0.5" stroke-linejoin="round"></polygon></svg>
+```
+
 ## Perfect Component Example
 ```typescript
 import { Component, signal, computed } from '@angular/core';
