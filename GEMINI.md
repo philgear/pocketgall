@@ -1,20 +1,24 @@
 # Pocket-Gull (Understory)
 
 ## Project Overview
+
 Pocket-Gull is a real-time medical Care Plan Strategy and Live AI Consult engine powered by Google Gemini. The application is designed to provide actionable clinical intelligence, manage patient state, and offer real-time streaming AI consultations for symptom management and functional medicine.
 
 ## Tech Stack
+
 - **Frontend**: Angular 18 (Standalone Components, Signals)
 - **Backend/SSR**: Node.js, Express, Angular Server-Side Rendering
 - **AI Integration**: Google Gemini (via native REST, `@google/adk`, `@google/genai`, and Genkit)
 - **Styling**: TailwindCSS
 
 ## Key Architecture Concepts
+
 - **Patient State**: Managed centrally via `PatientStateService`, which holds current symptoms, vitals, and selected conditions.
 - **AI Intelligence Layer**: Services (`ClinicalIntelligenceService`, `GeminiProvider`, `AdkLiveService`) handle connecting to Gemini models for one-off completions, multi-turn chat, and full-duplex multimodal live audio streaming.
 - **Proxy**: During development, an explicit proxy is used to connect WebSocket streams and API routes to the backend correctly.
 
 ## Developer Instructions
+
 - **Signals**: Always favor Angular Signals (`computed`, `signal`, `effect`) over RxJS observables for local component state.
 - **Components**: Standalone components are the strict standard. Do not use NgModules.
 - **Typing**: Use explicit types for all function returns and state definitions where practical. Prefix interfaces with `I`.
@@ -22,26 +26,32 @@ Pocket-Gull is a real-time medical Care Plan Strategy and Live AI Consult engine
 - **Styling**: Prefer Tailwind utility classes for all new styling components. Do not use generic colors; use the curated color palette and ensure a rich, premium aesthetic with micro-animations.
 
 ## Code Style & Conventions
+
 - **Naming**: Use camelCase for variables and functions, PascalCase for classes and components. Suffix observable streams with `$`.
 - **Structure**: Keep components small and focused. Extract heavy logic into injectable services.
 - **Documentation**: Provide TSDoc style comments for complex service methods or AI integration points.
 
 ## Testing Philosophy
+
 - Wait for explicit user instruction before writing or modifying tests, unless fixing a build error.
 - Use the standard Angular testing utilities for any generated tests.
 
 ## Deployment & Scripts
+
 - Start the development server using `npm run dev` (this handles both the client and the integrated SSR Express server).
 - To verify a build, execute `npm run build`.
 - Deployment is to Google Cloud Run via `npm run deploy`.
 
 ## Brand & Visual Identity
+
 - **Pocket Gull Logo (Origami Seagull)**: Always rigorously adhere to the following SVG structure for the Pocket Gull brand logo. *(Note: Strip off compiled `_ngcontent` context tags when injecting into fresh Angular components to respect pristine View Encapsulation).*
+
 ```html
 <svg width="42" height="42" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="shrink-0"><polygon points="50,40 65,15 58,45" fill="#d0d0d0" stroke="#b0b0b0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="20,50 50,40 10,35" fill="#e0e0e0" stroke="#d0d0d0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="20,50 50,40 58,45 75,55 50,65" fill="#f4f4f4" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="50,40 58,45 35,85" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="50,40 35,85 20,50" fill="#f9f9f9" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="75,55 58,45 85,38" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round"></polygon><polygon points="85,38 82,45 95,34" fill="#ff4500" stroke="#df3d00" stroke-width="0.5" stroke-linejoin="round"></polygon></svg>
 ```
 
 ## Perfect Component Example
+
 ```typescript
 import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -67,6 +77,6 @@ export class MetricCardComponent {
   value = signal(72);
   trend = signal(2.5);
 
-  displayValue = computed(() => \`\${this.value()} bpm\`);
+  displayValue = computed(() => `${this.value()} bpm`);
 }
 ```

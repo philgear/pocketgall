@@ -1,10 +1,10 @@
 import express from 'express';
 import compression from 'compression';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
-import os from 'node:os';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,7 +12,28 @@ const __dirname = dirname(__filename);
 
 const app = express();
 app.use(compression());
-app.use('/api', cors()); // Enable CORS for API routes so Flutter apps can sync data
+
+// Lock CORS to known origins
+const corsOptions = {
+  origin: [
+    'https://pocketgull.app',
+    'https://www.pocketgull.app',
+    'http://localhost:4200',
+    'http://localhost:3000',
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+};
+app.use('/api', cors(corsOptions));
+
+// Rate limit: 60 requests per minute per IP across all /api routes
+const apiLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+app.use('/api', apiLimiter);
 
 // Trust the Google Cloud Run proxy so req.hostname resolves correctly
 app.set('trust proxy', true);
@@ -103,6 +124,16 @@ app.use((req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
   res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Strict CSP explicitly allowing only our own resources, PubMed API, Google GCP APIs, and Wikipedia/Wikimedia for scans.
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "connect-src 'self' https://eutils.ncbi.nlm.nih.gov https://*.googleapis.com https://cloudflareinsights.com; " +
+    "img-src 'self' data: https://upload.wikimedia.org blob:; " +
+    "script-src 'self' 'unsafe-inline'; " +
+    "style-src 'self' 'unsafe-inline';"
+  );
   next();
 });
 
@@ -136,24 +167,15 @@ app.get('/api/pubmed/summary', async (req, res) => {
 });
 
 // Enable parsing JSON bodies for POST requests
-app.use(express.json({ limit: '50mb' }));
+// Body limit: 1mb is generous for patient JSON; images go through /api/ai/analyze-image which handles its own sizing
+app.use(express.json({ limit: '1mb' }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-// OS Native Diagnostic Endpoints
-app.get('/api/system/stats', (req, res) => {
-  res.json({
-    platform: os.platform(),
-    totalMemMB: Math.round(os.totalmem() / 1024 / 1024),
-    freeMemMB: Math.round(os.freemem() / 1024 / 1024),
-    uptime: os.uptime(),
-    cpus: os.cpus().length,
-    loadAvg: os.loadavg()[0]?.toFixed(2) || '0.00'
-  });
-});
+// /api/system/stats removed — leaked OS fingerprint info to unauthenticated callers
 
 // JSON File Database Configuration
 const dataDir = join(rootDir, 'data');

@@ -33,6 +33,7 @@ dist-ssr
 # Generated Reports & Snapshots
 dom-*.html
 lh-*.json
+lh-*.txt
 lighthouse-*.json
 lighthouse-*.html
 bundle-*.json
@@ -45,11 +46,36 @@ sandbox/
 # Agent Rules
 rules.yaml
 
+# Secrets & local credentials (never commit)
+dev_secure.json
+pgb_secure.json
+*_secure.json
+metadata.json
+
+# Cloud Run / API output dumps (generated, moved to tests/)
+cr_*.json
+bs*.json
+neg*.json
+backend.json
+case_study.md
+
 # Companion apps
 companion-apps/
 
 # Temp logs and generated reports
 .tmp_*.txt
+.tmp_*.log
+.tmp_*.json
+.tmp_*.mjs
+.tmp_*.yaml
 branches.txt
 audit.json
 chromewebdata_*.report.html
+
+# Test outputs (generated, not committed)
+tests/playwright-report/
+tests/test-results/
+tests/*.log
+tests/*.json
+tests/*.txt
+tests/*.html

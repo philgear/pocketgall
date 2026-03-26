@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, from, throwError } from 'rxjs';
 import { IntelligenceProvider } from './intelligence.provider';
 import { GeminiProvider } from './gemini.provider';
 import { PubGemmaProvider } from './pubgemma.provider';
@@ -20,7 +19,7 @@ export class HybridProvider implements IntelligenceProvider {
   private network = inject(NetworkStateService);
 
   async *generateReportStream(patientData: string, lens: string, systemInstruction: string): AsyncIterable<string> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try {
         yield* this.gemini.generateReportStream(patientData, lens, systemInstruction);
       } catch (errGem) {
@@ -60,7 +59,7 @@ export class HybridProvider implements IntelligenceProvider {
   }
 
   async generateMetrics(reportText: string): Promise<ClinicalMetrics> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try { return await this.gemini.generateMetrics(reportText); } catch (e1) {
         try { return await this.webgpu.generateMetrics(reportText); } catch (e2) {
           return await this.nano.generateMetrics(reportText);
@@ -76,7 +75,7 @@ export class HybridProvider implements IntelligenceProvider {
   }
 
   async detectClinicalChanges(oldData: string, newData: string): Promise<boolean> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try { return await this.gemini.detectClinicalChanges(oldData, newData); } catch (e1) {
         try { return await this.webgpu.detectClinicalChanges(oldData, newData); } catch (e2) {
           return await this.nano.detectClinicalChanges(oldData, newData);
@@ -92,7 +91,7 @@ export class HybridProvider implements IntelligenceProvider {
   }
 
   async verifySection(lens: string, content: string, sourceData: string): Promise<{ status: string, issues: VerificationIssue[] }> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try { return await this.gemini.verifySection(lens, content, sourceData); } catch (e1) {
         try { return await this.webgpu.verifySection(lens, content, sourceData); } catch (e2) {
           return await this.nano.verifySection(lens, content, sourceData);
@@ -108,7 +107,7 @@ export class HybridProvider implements IntelligenceProvider {
   }
 
   async translateReadingLevel(text: string, level: 'simplified' | 'dyslexia' | 'child'): Promise<string> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try { return await this.gemini.translateReadingLevel(text, level); } catch (e1) {
         try { return await this.webgpu.translateReadingLevel(text, level); } catch (e2) {
           return await this.nano.translateReadingLevel(text, level);
@@ -124,7 +123,7 @@ export class HybridProvider implements IntelligenceProvider {
   }
 
   async analyzeTranslation(original: string, translated: string): Promise<string> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try { return await this.gemini.analyzeTranslation(original, translated); } catch (e1) {
         try { return await this.webgpu.analyzeTranslation(original, translated); } catch (e2) {
           return await this.nano.analyzeTranslation(original, translated);
@@ -140,7 +139,7 @@ export class HybridProvider implements IntelligenceProvider {
   }
 
   async analyzeImage(base64Image: string, context?: string): Promise<string> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try { return await this.gemini.analyzeImage(base64Image, context); } catch (e1) {
         try { return await this.webgpu.analyzeImage(base64Image, context); } catch (e2) {
           return await this.nano.analyzeImage(base64Image, context);
@@ -156,7 +155,7 @@ export class HybridProvider implements IntelligenceProvider {
   }
 
   async startChat(patientData: string, context: string): Promise<void> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try { await this.gemini.startChat(patientData, context); } catch (e1) {
         try { await this.webgpu.startChat(patientData, context); } catch (e2) {
           await this.nano.startChat(patientData, context);
@@ -172,7 +171,7 @@ export class HybridProvider implements IntelligenceProvider {
   }
 
   async sendMessage(message: string, files?: File[]): Promise<string> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try { return await this.gemini.sendMessage(message, files); } catch (e1) {
         try { return await this.webgpu.sendMessage(message, files); } catch (e2) {
           return await this.nano.sendMessage(message, files);
@@ -188,7 +187,7 @@ export class HybridProvider implements IntelligenceProvider {
   }
 
   async getInitialGreeting(prompt: string): Promise<string> {
-    if (this.network.isOnline()) {
+    if (!this.network.useLocalInference()) {
       try { return await this.gemini.getInitialGreeting(prompt); } catch (e1) {
         try { return await this.webgpu.getInitialGreeting(prompt); } catch (e2) {
           return await this.nano.getInitialGreeting(prompt);

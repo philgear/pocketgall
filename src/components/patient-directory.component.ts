@@ -10,11 +10,11 @@ import { Patient } from '../services/patient.types';
   imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="fixed inset-0 bg-[#EEEEEE] dark:bg-zinc-950 z-50 overflow-y-auto w-full h-full flex flex-col no-print font-sans transition-colors duration-300">
+    <div class="fixed inset-0 bg-[#EEEEEE] dark:bg-zinc-950 z-[60] overflow-y-auto w-full h-full flex flex-col no-print font-sans transition-colors duration-300">
       
       <!-- New Patient Modal -->
       @if (showNewPatientModal()) {
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
           <div class="bg-white dark:bg-zinc-900 rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl border border-gray-200 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200">
             <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Create New Patient</h2>
             

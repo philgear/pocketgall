@@ -60,7 +60,7 @@
 
     // ─── API Key ──────────────────────────────────────────────────
     function getApiKey() {
-        return localStorage.getItem(API_KEY_STORAGE);
+        return window.PG_DOCS_ENV_KEY || localStorage.getItem(API_KEY_STORAGE);
     }
 
     function promptForKey(callback) {

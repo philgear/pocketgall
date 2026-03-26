@@ -12,6 +12,7 @@ declare var webkitSpeechRecognition: any;
 import { SummaryNode, SummaryNodeItem, ReportSection, ParsedTranscriptEntry, NodeAnnotation, LensAnnotations, VerificationIssue } from './analysis-report.types';
 import { SummaryNodeComponent } from './summary-node.component';
 import { PocketGullCardComponent } from './shared/pocket-gull-card.component';
+import { ExportService } from '../services/export.service';
 import { AuditService } from '../services/audit.service';
 import { PocketGullBadgeComponent } from './shared/pocket-gull-badge.component';
 import { ClinicalGaugeComponent } from './clinical-gauge.component';
@@ -258,24 +259,23 @@ import { RevealDirective } from '../directives/reveal.directive';
            [style.left.px]="tooltip.x"
            [style.top.px]="tooltip.y"
            style="transform: translate(-50%, -100%);">
-         <div class="flex items-start gap-3 relative z-10">
-           @if (tooltip.severity === 'high') {
-             <div class="text-red-500 mt-0.5 shrink-0" [innerHTML]="ClinicalIcons.Risk | safeHtml"></div>
-           } @else {
-             <div class="text-amber-500 mt-0.5 shrink-0" [innerHTML]="ClinicalIcons.Warning | safeHtml"></div>
-           }
-           <div>
-             <div class="text-[10px] font-bold uppercase tracking-wider mb-1"
-                  [class.text-red-600]="tooltip.severity === 'high'"
-                  [class.text-amber-600]="tooltip.severity !== 'high'">
-               AI Verification Flag
-             </div>
-             <div class="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">{{ tooltip.text }}</div>
-           </div>
-         </div>
-         <!-- Caret -->
-         <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-zinc-900 border-b border-r border-gray-200 dark:border-zinc-800 rotate-45"></div>
-      </div>
+        <div class="flex items-start gap-3 relative z-10">
+          <!-- Spectral severity icon: P1-Critical (640nm red) vs P2-Urgent (585nm amber) -->
+          <div class="mt-0.5 shrink-0"
+               [style.color]="tooltip.severity === 'high' ? 'var(--spectral-critical)' : 'var(--spectral-urgent)'"
+               [innerHTML]="tooltip.severity === 'high' ? ClinicalIcons.Risk : ClinicalIcons.Warning | safeHtml">
+          </div>
+          <div>
+            <div class="text-[10px] font-bold uppercase tracking-wider mb-1"
+                 [style.color]="tooltip.severity === 'high' ? 'var(--spectral-critical)' : 'var(--spectral-urgent)'">
+              AI Verification Flag
+            </div>
+            <div class="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">{{ tooltip.text }}</div>
+          </div>
+        </div>
+        <!-- Caret -->
+        <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-zinc-900 border-b border-r border-gray-200 dark:border-zinc-800 rotate-45"></div>
+     </div>
     }
   `
 })
@@ -285,6 +285,7 @@ export class AnalysisReportComponent implements OnDestroy {
   protected readonly patientManager = inject(PatientManagementService);
   protected readonly dictation = inject(DictationService);
   private audit = inject(AuditService);
+  protected readonly export = inject(ExportService);
 
   readonly hasApiKey = computed(() => {
     // This line was part of the user's provided snippet, but it was incomplete and syntactically incorrect.
@@ -824,7 +825,15 @@ export class AnalysisReportComponent implements OnDestroy {
     console.log('Patient summary finalized and saved to chart.');
   }
 
-  printReport() { window.print(); }
+  printReport() {
+    const results = this.intel.analysisResults();
+    const patientName = this.patientManager.selectedPatient()?.name || 'Clinical User';
+
+    this.export.downloadAsPdf({
+      report: results,
+      summary: results['Summary Overview'] || 'No summary available.'
+    }, patientName);
+  }
 
   // --- Live Consult Actions ---
 

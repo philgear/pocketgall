@@ -9,6 +9,10 @@ This directory contains the Terraform configuration to deploy Pocket Gull in a h
 3. **Internal Ingress:** The `main.tf` restricts ingress to `INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER`, meaning the clinical application can only be accessed by clinicians connected to your organization's VPN or corporate intranet—not the open web.
 4. **Log Sanitization:** The environment variables explicitly enforce a `warn` level log output across the application to prevent any accidental request payloads (like transcribed symptoms) from being dumped to Cloud Logging.
 
+## Environment Secrets
+
+Before deploying or running locally, ensure your `GEMINI_API_KEY` is available in your `.env` file or exported to your shell environment. The server and Cloud Run configurations explicitly require this value to authorize multimodal LLM requests.
+
 ## Usage
 
 If you prefer using the standard `gcloud` CLI instead of Terraform, you can achieve the same environment constraints by running:
@@ -18,6 +22,7 @@ npm run deploy:secure
 ```
 
 To use Terraform:
+
 1. Ensure `gcloud` is authenticated and your Google Cloud project is set.
 2. Run `terraform init`.
 3. Run `terraform plan` to view resources.

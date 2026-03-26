@@ -5,6 +5,7 @@ import { VerificationIssue } from '../components/analysis-report.types';
 import { AI_CONFIG } from './ai-provider.types';
 import { IntelligenceProviderToken } from './ai/intelligence.provider.token';
 import { NetworkStateService } from './network-state.service';
+import { RulesEngineService } from './rules-engine.service';
 
 export interface TranscriptEntry {
     role: 'user' | 'model';
@@ -33,6 +34,7 @@ export class ClinicalIntelligenceService {
     readonly ai = inject(IntelligenceProviderToken);
     private cache = inject(AiCacheService);
     private network = inject(NetworkStateService);
+    private rules = inject(RulesEngineService);
 
     readonly isLoading = signal<boolean>(false);
     readonly error = signal<string | null>(null);
@@ -209,8 +211,8 @@ If a section has no relevant source data, output the heading followed by: "*No s
     }
 
     async generateComprehensiveReport(patientData: string): Promise<Partial<Record<AnalysisLens, string>>> {
-        if (!this.network.isOnline()) {
-            this.error.set("You are currently offline. Please reconnect to consult the AI.");
+        if (!this.network.useLocalInference() && !this.network.isOnline()) {
+            this.error.set("You are currently offline and no local inference endpoint is available.");
             return {};
         }
 
@@ -265,6 +267,8 @@ If a section has no relevant source data, output the heading followed by: "*No s
                             newReport[lens] = responseText;
                             this.analysisResults.update(all => ({ ...all, [lens]: responseText }));
                         }
+                        // Apply rules-engine post-processing (disclaimer appends, etc.)
+                        responseText = this.rules.evaluateOnResponse(responseText, lens);
                         await this.cache.set(cacheKey, responseText);
                     }
 
@@ -308,8 +312,8 @@ If a section has no relevant source data, output the heading followed by: "*No s
     }
 
     async startChatSession(patientData: string) {
-        if (!this.network.isOnline()) {
-            this.error.set("You are currently offline. Please reconnect to start the chat session.");
+        if (!this.network.isOnline() && !this.network.useLocalInference()) {
+            this.error.set("You are currently offline and no local inference endpoint is available.");
             return;
         }
 
@@ -344,8 +348,15 @@ If a section has no relevant source data, output the heading followed by: "*No s
     async sendChatMessage(message: string): Promise<string> {
         this.transcript.update(t => [...t, { role: 'user', text: message }]);
 
-        if (!this.network.isOnline()) {
-            const errorMsg = "You are currently offline. Please reconnect to consult the AI.";
+        // ── Rules Engine: pre-send guard ────────────────────────────────────────
+        const blocked = this.rules.evaluateOnMessage(message);
+        if (blocked) {
+            this.transcript.update(t => [...t, { role: 'model', text: blocked.reply }]);
+            return blocked.reply;
+        }
+
+        if (!this.network.isOnline() && !this.network.useLocalInference()) {
+            const errorMsg = "You are currently offline and no local inference endpoint is available.";
             this.error.set(errorMsg);
             this.transcript.update(t => [...t, { role: 'model', text: errorMsg }]);
             return errorMsg;
@@ -355,7 +366,9 @@ If a section has no relevant source data, output the heading followed by: "*No s
         this.error.set(null);
 
         try {
-            const response = await this.ai.sendMessage(message);
+            let response = await this.ai.sendMessage(message);
+            // ── Rules Engine: post-process modifier ─────────────────────────────
+            response = this.rules.evaluateOnResponse(response, message);
             this.transcript.update(t => [...t, { role: 'model', text: response }]);
             return response;
         } catch (e: any) {

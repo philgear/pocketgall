@@ -65,7 +65,14 @@
               "debug",
               "agent-base",
               "node-domexception",
-              "web-streams-polyfill"
+              "web-streams-polyfill",
+              "winston",
+              "@opentelemetry/sdk-trace-node",
+              "cross-spawn",
+              "@grpc/grpc-js",
+              "@grpc/proto-loader",
+              "ajv",
+              "ajv-formats"
             ],
             "externalDependencies": [
               "@google-cloud/storage",

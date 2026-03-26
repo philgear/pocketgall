@@ -445,71 +445,94 @@ app.post('/api/ai/chat/message', express.json({ limit: '50mb' }), async (req, re
     const { sessionId, message, files, enableGrounding } = req.body;
     const session = chatSessions.get(sessionId);
     if (!session) throw new Error('Chat session not found. Please refresh and try again.');
-    
-    // Build user message
+
+    const key = await getApiKey();
+    if (!key) throw new Error('API key not available on server.');
+
+    // Build user message parts
     const userParts: any[] = [];
     if (message) userParts.push({ text: message });
-    // Vertex AI BAA-Compliant Inference Config
-    const projectId = await vertexAuth.getProjectId();
-    const vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
 
-    let radiologySynthesis = '';
+    // --- Vertex AI multimodal path (only when files are attached) ---
     if (files && Array.isArray(files) && files.length > 0) {
-      // Dynamic Sub-Agent Router: Radiology & Dermatology ADK Injection
+      let vertexAI: VertexAI | null = null;
       try {
+        const projectId = await vertexAuth.getProjectId();
+        vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
+      } catch (vertexErr: any) {
+        console.warn('[Vertex] Could not initialise Vertex AI (likely no ADC in local dev). Falling back to inline data.', vertexErr.message);
+      }
+
+      // Dynamic Sub-Agent Router: Radiology & Dermatology ADK Injection
+      if (vertexAI) {
+        try {
           const { RadiologyAgent } = await import('./services/ai/agents/radiology.agent.js');
           const radioModel = vertexAI.getGenerativeModel({
-             model: 'gemini-2.5-flash',
-             systemInstruction: { role: 'system', parts: [{ text: String(RadiologyAgent.instruction) }] }
+            model: 'gemini-2.5-flash',
+            systemInstruction: { role: 'system', parts: [{ text: String(RadiologyAgent.instruction) }] }
           });
-          
-          const radioParts: any[] = [{ text: "Please meticulously analyze the attached medical imaging/telemetry." }];
+
+          const radioParts: any[] = [{ text: 'Please meticulously analyze the attached medical imaging/telemetry.' }];
           for (const file of files) {
-             radioParts.push({ inlineData: { data: file.data, mimeType: file.type } });
+            radioParts.push({ inlineData: { data: file.data, mimeType: file.type } });
           }
-          
+
           const radioResp = await radioModel.generateContent({ contents: [{ role: 'user', parts: radioParts }] });
-          radiologySynthesis = radioResp.response.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          
-          // Inject the agent's explicit findings into the prompt context silently
+          const radiologySynthesis = radioResp.response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
           userParts.push({ text: `\n\n[SYSTEM SUB-AGENT MULTIMODAL INGESTION]:\nThe attached medical files were routed through the specialized Radiology/Dermatology Agent. Its raw findings are as follows:\n\n${radiologySynthesis}\n\nPlease synthesize these insights natively into your response to the user.` });
-      } catch (err) {
-          console.error('Radiology Agent routing failed', err);
-          // Fallback: pass raw files to main agent
+        } catch (err) {
+          console.error('Radiology Agent routing failed, passing raw inlineData', err);
           for (const file of files) {
             userParts.push({ inlineData: { data: file.data, mimeType: file.type } });
           }
+        }
+      } else {
+        // No Vertex available — pass raw inline data directly
+        for (const file of files) {
+          userParts.push({ inlineData: { data: file.data, mimeType: file.type } });
+        }
       }
     }
-    
-    // Append standard user context
+
+    // Append user turn to history
     session.history.push({ role: 'user', parts: userParts });
 
     const rawModel = session.model.replace(/^models\//, '');
-    
-    const vertexOptions: any = {
-      model: rawModel,
-      systemInstruction: { role: 'system', parts: [{ text: session.systemInstruction }] },
+
+    // --- Direct Gemini REST path (text-only or Vertex unavailable) ---
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${rawModel}:generateContent?key=${key}`;
+
+    const requestBody: any = {
+      contents: session.history,
+      systemInstruction: { parts: [{ text: session.systemInstruction }] },
       generationConfig: { temperature: session.temperature }
     };
-    
-    if (enableGrounding) {
-        vertexOptions.tools = [{ googleSearchRetrieval: { disableAttribution: false } }];
-    }
-    
-    const generativeModel = vertexAI.getGenerativeModel(vertexOptions);
 
-    const resp = await generativeModel.generateContent({
-      contents: session.history
+    if (enableGrounding) {
+      requestBody.tools = [{ googleSearch: {} }];
+    }
+
+    const geminiResp = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Referer': 'https://pocketgull.app/' },
+      body: JSON.stringify(requestBody)
     });
 
-    const responseText = resp.response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!geminiResp.ok) {
+      const errText = await geminiResp.text();
+      throw new Error(`Gemini API error ${geminiResp.status}: ${errText}`);
+    }
 
-    // Append model response
+    const geminiData = await geminiResp.json();
+    const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // Append model turn to history
     session.history.push({ role: 'model', parts: [{ text: responseText }] });
 
     res.json({ text: responseText });
   } catch (e: any) {
+    console.error('[/api/ai/chat/message] Error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
@@ -650,6 +673,7 @@ app.use((req, res, next) => {
         modRes.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
         modRes.headers.set('Pragma', 'no-cache');
         modRes.headers.set('Expires', '0');
+        modRes.headers.delete('Content-Length');
 
         writeResponseToNodeResponse(modRes, res);
       } else {

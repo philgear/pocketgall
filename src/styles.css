@@ -2,6 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPECTROSCOPIC KAIZEN MEDICAL COLOR SYSTEM
+   Maps visible-light wavelengths to clinical triage severity roles.
+   Light theme: Emission spectrum  — bright, saturated lines on a white field.
+   Dark theme:  Absorption spectrum — muted Fraunhofer notch glow on deep zinc.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── P1 Immediate — 640nm Spectral Red ─────────────────────────── */
+  --spectral-critical:        #C8181C;
+  --spectral-critical-bg:     #FEF2F2;
+  --spectral-critical-border: #FECACA;
+  --spectral-critical-muted:  #FCA5A5;
+
+  /* ── P2 Urgent — 585nm Sodium Amber ────────────────────────────── */
+  --spectral-urgent:          #B45309;
+  --spectral-urgent-bg:       #FFFBEB;
+  --spectral-urgent-border:   #FDE68A;
+  --spectral-urgent-muted:    #FCD34D;
+
+  /* ── P3 Stable — 532nm Emerald Green ───────────────────────────── */
+  --spectral-stable:          #15803D;
+  --spectral-stable-bg:       #F0FDF4;
+  --spectral-stable-border:   #BBF7D0;
+  --spectral-stable-muted:    #86EFAC;
+
+  /* ── Informational / AI — 470nm Cerulean Blue ──────────────────── */
+  --spectral-info:            #1D4ED8;
+  --spectral-info-bg:         #EFF6FF;
+  --spectral-info-border:     #BFDBFE;
+  --spectral-info-muted:      #93C5FD;
+
+  /* ── Research / Provenance — 420nm Violet-Indigo ───────────────── */
+  --spectral-research:        #6D28D9;
+  --spectral-research-bg:     #F5F3FF;
+  --spectral-research-border: #DDD6FE;
+  --spectral-research-muted:  #C4B5FD;
+}
+
+/* Dark theme: Absorption spectrum — glowing lines on a deep background */
+.dark {
+  /* ── P1 Immediate — 640nm Absorption Red ───────────────────────── */
+  --spectral-critical:        #F87171;
+  --spectral-critical-bg:     #1a0808;
+  --spectral-critical-border: #7F1D1D;
+  --spectral-critical-muted:  #991B1B;
+
+  /* ── P2 Urgent — 585nm Absorption Amber ────────────────────────── */
+  --spectral-urgent:          #FBBF24;
+  --spectral-urgent-bg:       #1a1305;
+  --spectral-urgent-border:   #78350F;
+  --spectral-urgent-muted:    #92400E;
+
+  /* ── P3 Stable — 532nm Absorption Green ────────────────────────── */
+  --spectral-stable:          #4ADE80;
+  --spectral-stable-bg:       #071611;
+  --spectral-stable-border:   #14532D;
+  --spectral-stable-muted:    #166534;
+
+  /* ── Informational / AI — 470nm Absorption Blue ────────────────── */
+  --spectral-info:            #60A5FA;
+  --spectral-info-bg:         #070e1a;
+  --spectral-info-border:     #1E3A5F;
+  --spectral-info-muted:      #1E40AF;
+
+  /* ── Research / Provenance — 420nm Absorption Violet ───────────── */
+  --spectral-research:        #A78BFA;
+  --spectral-research-bg:     #0d0914;
+  --spectral-research-border: #3B1F6E;
+  --spectral-research-muted:  #4C1D95;
+}
+
 @keyframes wobble {
 
     0%,
@@ -295,16 +367,17 @@
 .dark .rams-typography li::before { background: #52525b; }
 
 .rams-typography blockquote {
-    border-left: 4px solid #689F38;
+    /* Spectral P3-Stable: 532nm emerald — quoted clinical evidence */
+    border-left: 4px solid var(--spectral-stable);
     padding: 1rem 1.5rem;
-    background-color: #F9FAFB;
+    background-color: var(--spectral-stable-bg);
     font-style: italic;
     font-weight: 500;
     color: #4B5563;
     margin: 2rem 0;
     border-radius: 0 8px 8px 0;
 }
-.dark .rams-typography blockquote { background-color: #18181b; color: #a1a1aa; border-left-color: #8bc34a; }
+.dark .rams-typography blockquote { background-color: var(--spectral-stable-bg); color: #a1a1aa; border-left-color: var(--spectral-stable); }
 
 /* Tables — AI-generated tables for labs, medication, and monitoring */
 .rams-typography table {
@@ -348,9 +421,10 @@
 .dark .rams-typography tbody tr:nth-child(even) { background: #09090b; }
 
 .rams-typography tbody tr:hover {
-    background: #F0FDF4;
+    /* Spectral P3-Stable hover wash */
+    background: var(--spectral-stable-bg);
 }
-.dark .rams-typography tbody tr:hover { background: #14532d; }
+.dark .rams-typography tbody tr:hover { background: var(--spectral-stable-bg); }
 
 /* Responsive table wrapper */
 .rams-typography .table-wrapper {
@@ -438,35 +512,40 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     padding: 2px 5px;
-    background: rgba(104, 159, 56, 0.18);
-    color: #8bc34a;
+    /* Spectral P3-Stable — default badge */
+    background: color-mix(in srgb, var(--spectral-stable) 18%, transparent);
+    color: var(--spectral-stable);
     border-radius: 3px;
-    border: 1px solid rgba(104, 159, 56, 0.25);
+    border: 1px solid color-mix(in srgb, var(--spectral-stable) 25%, transparent);
     flex-shrink: 0;
 }
 
+/* AI Model — Spectral Info (470nm Cerulean Blue) */
 .rm-card--model .rm-card-badge {
-    background: rgba(66, 133, 244, 0.15);
-    color: #7ab4f8;
-    border-color: rgba(66, 133, 244, 0.25);
+    background: color-mix(in srgb, var(--spectral-info) 15%, transparent);
+    color: var(--spectral-info);
+    border-color: color-mix(in srgb, var(--spectral-info) 25%, transparent);
 }
 
+/* Gallery — Spectral Urgent (585nm Amber) */
 .rm-card--gallery .rm-card-badge {
-    background: rgba(251, 188, 4, 0.12);
-    color: #f9c232;
-    border-color: rgba(251, 188, 4, 0.2);
+    background: color-mix(in srgb, var(--spectral-urgent) 12%, transparent);
+    color: var(--spectral-urgent);
+    border-color: color-mix(in srgb, var(--spectral-urgent) 20%, transparent);
 }
 
+/* PubMed — Spectral Research (420nm Violet-Indigo) */
 .rm-card--pubmed .rm-card-badge {
-    background: rgba(234, 67, 53, 0.12);
-    color: #f28b82;
-    border-color: rgba(234, 67, 53, 0.2);
+    background: color-mix(in srgb, var(--spectral-research) 12%, transparent);
+    color: var(--spectral-research);
+    border-color: color-mix(in srgb, var(--spectral-research) 20%, transparent);
 }
 
+/* Phil/Default — Spectral Stable (532nm Green) */
 .rm-card--phil .rm-card-badge {
-    background: rgba(104, 159, 56, 0.18);
-    color: #8bc34a;
-    border-color: rgba(104, 159, 56, 0.25);
+    background: color-mix(in srgb, var(--spectral-stable) 18%, transparent);
+    color: var(--spectral-stable);
+    border-color: color-mix(in srgb, var(--spectral-stable) 25%, transparent);
 }
 
 .rm-card-footer {
@@ -855,7 +934,7 @@
   }
 
   /* Hide all non-printable UI elements (sidebars, toolbars, buttons) */
-  .no-print, header, nav, .header-shadow, button, .hover\\:-translate-y-1 {
+  .no-print, header, nav, .header-shadow, button, [class*="hover:-translate-y-1"] {
     display: none !important;
   }
 
@@ -880,7 +959,7 @@
   }
 
   /* Flatten all cards into stark letterhead blocks */
-  .print-medical-chart .bg-white, .print-medical-chart .dark\\:bg-zinc-900 {
+  .print-medical-chart .bg-white, .print-medical-chart [class*="dark:bg-zinc-900"] {
     background: transparent !important;
     border: 1px dotted #333 !important;
     box-shadow: none !important;

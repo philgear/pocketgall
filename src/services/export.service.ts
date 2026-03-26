@@ -396,10 +396,12 @@ export class ExportService {
       html { font-size: 9.5pt; }
       body { background: white !important; }
       .page-wrap { padding: 0; max-width: 100%; }
-      .lens-section { page-break-inside: avoid; break-inside: avoid; }
+      .lens-section { page-break-inside: avoid; break-inside: avoid; margin-bottom: 20px; }
+      h1, h2, h3, h4, h5 { page-break-after: avoid; break-after: avoid; }
+      p, li, tr { page-break-inside: avoid; break-inside: avoid; }
       @page {
-        size: A4;
-        margin: 18mm 18mm 22mm 18mm;
+        size: letter portrait;
+        margin: 0.75in 0.75in 1in 0.75in;
       }
     }
 
@@ -460,9 +462,20 @@ export class ExportService {
 
       <!-- Letterhead -->
       <header class="letterhead">
-        <div class="brand-block">
-          <div class="brand-name">Pocket Gull</div>
-          <div class="brand-tagline">Clinical Intelligence Platform</div>
+        <div class="brand-block" style="display:flex;align-items:center;gap:12px;">
+          <svg width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+            <polygon points="50,40 65,15 58,45" fill="#d0d0d0" stroke="#b0b0b0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="20,50 50,40 10,35" fill="#e0e0e0" stroke="#d0d0d0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="20,50 50,40 58,45 75,55 50,65" fill="#f4f4f4" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="50,40 58,45 35,85" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="50,40 35,85 20,50" fill="#f9f9f9" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="75,55 58,45 85,38" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="85,38 82,45 95,34" fill="#ff4500" stroke="#df3d00" stroke-width="0.5" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <div class="brand-name">Pocket Gull</div>
+            <div class="brand-tagline">Clinical Intelligence Platform</div>
+          </div>
         </div>
         <div class="report-meta">
           <div><strong>Generated</strong> ${timestamp}</div>
@@ -535,7 +548,13 @@ export class ExportService {
     carePlanMarkdown: string,
     patientName: string = 'Patient',
     vitals?: { bp?: string; hr?: string; temp?: string; spO2?: string; weight?: string },
-    conditions?: string[]
+    conditions?: string[],
+    translationMatrix?: {
+      levelName: string;
+      translatedPlanMarkdown: string;
+      originalPlanMarkdown?: string | null;
+      analysisMarkdown?: string | null;
+    }
   ): Promise<void> {
     console.log('[ExportService] Opening styled Care Plan print report for:', patientName);
 
@@ -560,7 +579,10 @@ export class ExportService {
       hour: '2-digit', minute: '2-digit'
     });
 
-    const carePlanHtml = renderMd(carePlanMarkdown || '_No active care plan recorded for this visit._');
+    let documentTypeBadge = 'Finalized Care Plan';
+    if (translationMatrix) {
+      documentTypeBadge = `Translation Matrix: ${translationMatrix.levelName}`;
+    }
 
     // Strip trailing unit strings that may already be embedded in stored vitals values
     const stripUnits = (val: string, ...units: string[]): string => {
@@ -587,6 +609,75 @@ export class ExportService {
             <div class="conditions-tags">${conditions.map(c => `<span class="condition-tag">${c}</span>`).join('')}</div>
         </div>` : '';
 
+    let mainContentHtml = '';
+
+    if (translationMatrix) {
+      const translatedHtml = renderMd(translationMatrix.translatedPlanMarkdown);
+      const originalHtml = translationMatrix.originalPlanMarkdown ? renderMd(translationMatrix.originalPlanMarkdown) : '';
+      const analysisHtml = translationMatrix.analysisMarkdown ? renderMd(translationMatrix.analysisMarkdown) : '';
+
+      let analysisBlock = '';
+      if (analysisHtml) {
+        analysisBlock = `
+        <div class="matrix-analysis">
+          <div class="matrix-analysis-header">
+            <span style="display:inline-flex;color:var(--brand);width:14px;height:14px;">${ClinicalIcons.Verified}</span>
+            AI Translation Analysis
+          </div>
+          <div class="care-plan-body" style="padding:0;">
+            ${analysisHtml}
+          </div>
+        </div>`;
+      }
+
+      let matrixGrid = '';
+      if (originalHtml) {
+        matrixGrid = `
+        <div class="matrix-container split">
+          <div class="care-plan-section" style="margin-bottom:0;">
+            <div class="care-plan-header">
+              <div class="care-plan-header-icon" style="color:var(--brand);">${ClinicalIcons.Assessment}</div>
+              <div class="care-plan-title">Original Plan (Provider Ref)</div>
+            </div>
+            <div class="care-plan-body">${originalHtml}</div>
+          </div>
+          <div class="care-plan-section" style="margin-bottom:0;">
+            <div class="care-plan-header" style="background:var(--surface-accent);">
+              <div class="care-plan-header-icon" style="color:var(--brand);">${ClinicalIcons.Assessment}</div>
+              <div class="care-plan-title">Cognitive Level: ${translationMatrix.levelName}</div>
+            </div>
+            <div class="care-plan-body">${translatedHtml}</div>
+          </div>
+        </div>`;
+      } else {
+        matrixGrid = `
+        <div class="care-plan-section">
+          <div class="care-plan-header" style="background:var(--surface-accent);">
+            <div class="care-plan-header-icon" style="color:var(--brand);">${ClinicalIcons.Assessment}</div>
+            <div class="care-plan-title">Cognitive Level: ${translationMatrix.levelName}</div>
+          </div>
+          <div class="care-plan-body">${translatedHtml}</div>
+        </div>`;
+      }
+
+      mainContentHtml = analysisBlock + matrixGrid;
+
+    } else {
+      const carePlanHtml = renderMd(carePlanMarkdown || '_No active care plan recorded for this visit._');
+      mainContentHtml = `
+      <div class="care-plan-section">
+        <div class="care-plan-header">
+          <div class="care-plan-header-icon" style="color:var(--brand);">
+            ${ClinicalIcons.Assessment}
+          </div>
+          <div class="care-plan-title">Active Care Plan</div>
+        </div>
+        <div class="care-plan-body">
+          ${carePlanHtml}
+        </div>
+      </div>`;
+    }
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -594,22 +685,23 @@ export class ExportService {
   <title>Pocket Gull Care Plan — ${patientName}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --brand: #FF6600; /* Braun Orange Accent */
-      --brand-dark: #CC5200;
-      --ink: #111111;
-      --ink-muted: #555555;
-      --surface: #F9F9F9; /* Off-white Dieter Rams style */
-      --surface-subtle: #EBEBEB;
-      --surface-accent: #FFF5EE;
-      --border: #CCCCCC;
-      --border-accent: #FFCCAA;
-      --radius: 2px;
-      --font-body: 'Space Mono', 'Fira Code', monospace;
+      --brand: #059669;       /* Clinical green – Pocket Gull system */
+      --brand-dark: #047857;
+      --brand-blue: #1C6AFF;
+      --ink: #1C1C1C;
+      --ink-muted: #6B7280;
+      --surface: #FFFFFF;
+      --surface-subtle: #F9FAFB;
+      --surface-accent: #F0FDF4;
+      --border: #E5E7EB;
+      --border-accent: #A7F3D0;
+      --radius: 8px;
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
     /* Provide missing tailwind dimensions for inline icons */
@@ -621,7 +713,7 @@ export class ExportService {
 
     html { font-size: 10pt; }
     body {
-      font-family: var(--font-body);
+      font-family: var(--font);
       color: var(--ink);
       background: var(--surface);
       line-height: 1.65;
@@ -706,7 +798,7 @@ export class ExportService {
       width: 6px;
       height: 6px;
       background: var(--brand);
-      border-radius: 0;
+      border-radius: 50%;
     }
 
     /* ─── Patient Banner ────────────────────────────── */
@@ -798,7 +890,7 @@ export class ExportService {
 
     /* ─── Care Plan Section ──────────────────────────── */
     .care-plan-section {
-      border: 1px solid var(--border-accent);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
       margin-bottom: 28px;
@@ -808,12 +900,12 @@ export class ExportService {
       align-items: center;
       gap: 10px;
       padding: 13px 18px;
-      background: var(--surface-accent);
-      border-bottom: 1px solid var(--border-accent);
+      background: var(--surface-subtle);
+      border-bottom: 1px solid var(--border);
     }
     .care-plan-header-icon {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       color: var(--brand);
       flex-shrink: 0;
       display: flex;
@@ -911,6 +1003,35 @@ export class ExportService {
     }
     .care-plan-body blockquote p { margin: 0; font-size: 9pt; color: #374151; }
 
+    /* ─── Translation Matrix Layout ──────────────────── */
+    .matrix-container {
+      display: grid;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    .matrix-container.split {
+      grid-template-columns: 1fr 1fr;
+    }
+    .matrix-analysis {
+      background: var(--surface-accent);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      page-break-inside: avoid;
+    }
+    .matrix-analysis-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 8pt;
+      font-weight: 700;
+      color: var(--brand-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+
     /* ─── Attestation Box ────────────────────────────── */
     .attestation {
       border: 1px solid var(--border);
@@ -970,10 +1091,12 @@ export class ExportService {
       body { background: white !important; }
       body::before, body::after { position: absolute !important; }
       .page-wrap { padding: 0; max-width: 100%; }
-      .care-plan-section { page-break-inside: avoid; break-inside: avoid; }
+      .matrix-analysis { page-break-inside: avoid; break-inside: avoid; margin-bottom: 20px; }
+      h1, h2, h3, h4, h5 { page-break-after: avoid; break-after: avoid; }
+      p, li, tr { page-break-inside: avoid; break-inside: avoid; }
       @page {
-        size: A4;
-        margin: 18mm 18mm 22mm 18mm;
+        size: letter portrait;
+        margin: 0.75in 0.75in 1in 0.75in;
       }
     }
 
@@ -1034,9 +1157,20 @@ export class ExportService {
 
       <!-- Letterhead -->
       <header class="letterhead">
-        <div class="brand-block">
-          <div class="brand-name">Pocket Gull</div>
-          <div class="brand-tagline">Clinical Intelligence Platform</div>
+        <div class="brand-block" style="display:flex;align-items:center;gap:12px;">
+          <svg width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+            <polygon points="50,40 65,15 58,45" fill="#d0d0d0" stroke="#b0b0b0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="20,50 50,40 10,35" fill="#e0e0e0" stroke="#d0d0d0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="20,50 50,40 58,45 75,55 50,65" fill="#f4f4f4" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="50,40 58,45 35,85" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="50,40 35,85 20,50" fill="#f9f9f9" stroke="#e0e0e0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="75,55 58,45 85,38" fill="#ffffff" stroke="#f0f0f0" stroke-width="0.5" stroke-linejoin="round"/>
+            <polygon points="85,38 82,45 95,34" fill="#ff4500" stroke="#df3d00" stroke-width="0.5" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <div class="brand-name">Pocket Gull</div>
+            <div class="brand-tagline">Clinical Intelligence Platform</div>
+          </div>
         </div>
         <div class="report-meta">
           <div><strong>Generated</strong> ${timestamp}</div>
@@ -1046,7 +1180,7 @@ export class ExportService {
       </header>
 
       <!-- Document Type Badge -->
-      <div class="doc-type-badge">Finalized Care Plan</div>
+      <div class="doc-type-badge">${documentTypeBadge}</div>
 
       <!-- Patient Banner -->
       <div class="patient-banner">
@@ -1067,18 +1201,7 @@ export class ExportService {
       ${vitalsHtml}
       ${conditionsHtml}
 
-      <!-- Care Plan Section -->
-      <div class="care-plan-section">
-        <div class="care-plan-header">
-          <div class="care-plan-header-icon">
-            ${ClinicalIcons.Verified}
-          </div>
-          <div class="care-plan-title">Active Care Plan</div>
-        </div>
-        <div class="care-plan-body">
-          ${carePlanHtml}
-        </div>
-      </div>
+      ${mainContentHtml}
 
       <!-- Clinician Attestation -->
       <div class="attestation">

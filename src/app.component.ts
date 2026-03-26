@@ -28,6 +28,7 @@ import { WalkthroughTourComponent } from './components/walkthrough-tour.componen
 import { WalkthroughTourService } from './services/walkthrough-tour.service';
 import { SecureSplashComponent } from './components/secure-splash.component';
 import { SessionStateService } from './services/session-state.service';
+import { RulesEngineService } from './services/rules-engine.service';
 
 import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
 
@@ -59,11 +60,17 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
     <div class="min-h-[100dvh] md:h-[100dvh] w-full bg-[#EEEEEE] dark:bg-zinc-950 text-[#1C1C1C] dark:text-zinc-100 flex flex-col md:overflow-hidden font-sans selection:bg-green-100 selection:text-green-900 group/app">
       
       @if (isDirectoryOpen() || !patientMgmt.selectedPatientId()) {
-         <app-patient-directory></app-patient-directory>
+         @defer (on immediate) {
+           <app-patient-directory></app-patient-directory>
+         }
       }
 
-      <app-dictation-modal></app-dictation-modal>
-      <app-walkthrough-tour></app-walkthrough-tour>
+      @defer (on idle) {
+        <app-dictation-modal></app-dictation-modal>
+      }
+      @defer (on idle) {
+        <app-walkthrough-tour></app-walkthrough-tour>
+      }
       
       @if (session.isLocked() || !hasApiKey()) {
         <app-secure-splash
@@ -76,26 +83,29 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
         <main class="flex-1 flex flex-col min-w-0 min-h-0 relative group/main"> <!-- Main Content -->
         <!-- Offline Banner -->
         @if (!network.isOnline()) {
-          <div class="bg-red-50 border-b border-red-200 px-4 py-2 flex items-center justify-between gap-4 no-print shrink-0">
+          <!-- Spectral P1-Critical (640nm red) offline banner -->
+          <div class="border-b px-4 py-2 flex items-center justify-between gap-4 no-print shrink-0"
+               style="background-color: var(--spectral-critical-bg); border-color: var(--spectral-critical-border);">
             <div class="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-red-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-              <p class="text-xs text-red-800 font-medium">You are currently offline. Certain AI features and cloud sync may be disabled.</p>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" style="color: var(--spectral-critical);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+              <p class="text-xs font-medium" style="color: var(--spectral-critical);">You are currently offline. Certain AI features and cloud sync may be disabled.</p>
             </div>
             @if (network.forceOffline()) {
-                <button (click)="network.toggleForceOffline()" class="text-xs font-bold text-red-800 uppercase tracking-widest hover:text-red-900 whitespace-nowrap transition-colors border border-red-300 rounded px-2 py-1 bg-white/50">Reconnect</button>
+                <button (click)="network.toggleForceOffline()" class="text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors rounded px-2 py-1"
+                        style="color: var(--spectral-critical); border: 1px solid var(--spectral-critical-border); background: white;">Reconnect</button>
             }
           </div>
         }
-        <!-- Demo Banner -->
+        <!-- Spectral P2-Urgent (585nm amber) demo mode banner -->
         @if (isDemoMode()) {
-          <div class="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800/30 px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 no-print shrink-0">
+          <div class="border-b px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 no-print shrink-0"
+               style="background-color: var(--spectral-urgent-bg); border-color: var(--spectral-urgent-border);">
             <div class="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-600 dark:text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <p class="text-xs text-amber-800 dark:text-amber-200 font-medium">Demo Mode <span class="hidden sm:inline">— Showing pre-sampled patient data. AI analysis generation requires an API key.</span></p>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" style="color: var(--spectral-urgent);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <p class="text-xs font-medium" style="color: var(--spectral-urgent);">Demo Mode <span class="hidden sm:inline">— Showing pre-sampled patient data. AI analysis generation requires an API key.</span></p>
             </div>
             <div class="flex items-center gap-3">
-
-              <button (click)="exitDemoMode()" class="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest hover:text-amber-900 dark:hover:text-amber-300 whitespace-nowrap transition-colors">Enter API Key →</button>
+              <button (click)="exitDemoMode()" class="text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors" style="color: var(--spectral-urgent);">Enter API Key →</button>
             </div>
           </div>
         }
@@ -129,9 +139,11 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
                  [title]="network.isOnline() ? 'Click to simulate offline' : 'Click to disable offline override'">
             <div class="relative flex h-2 w-2">
               <span class="absolute inline-flex h-full w-full rounded-full opacity-75" 
-                    [class.bg-green-400]="network.isOnline()" [class.bg-red-400]="!network.isOnline()" [class.animate-ping]="network.isOnline()"
+                    [style.background-color]="network.isOnline() ? 'var(--spectral-stable)' : 'var(--spectral-critical)'"
+                    [class.animate-ping]="network.isOnline()"
                     style="will-change: transform, opacity;"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2" [class.bg-green-500]="network.isOnline()" [class.bg-red-500]="!network.isOnline()"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2"
+                    [style.background-color]="network.isOnline() ? 'var(--spectral-stable)' : 'var(--spectral-critical)'"></span>
             </div>
             <span class="text-xs font-bold text-gray-600 dark:text-zinc-400 uppercase tracking-widest">{{ network.isOnline() ? 'System Ready' : 'System Offline' }}</span>
               
@@ -145,7 +157,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
                     <div class="grid grid-cols-2 gap-4">
                        <div class="space-y-1">
                           <p class="text-xs text-gray-500 font-bold uppercase tracking-tighter">AI Node</p>
-                           <p class="text-xs text-white">{{ network.isOnline() ? 'Gemini Cloud' : 'NVIDIA Local' }}</p>
+                           <p class="text-xs text-white">{{ network.activeProvider() }}</p>
                        </div>
                        <div class="space-y-1">
                           <p class="text-xs text-gray-500 font-bold uppercase tracking-tighter">Relay</p>
@@ -160,7 +172,15 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
                           <p class="text-xs text-white">Healthy</p>
                        </div>
                      </div>
-                     <div class="pt-2 mt-1 border-t border-gray-800">
+                     <div class="pt-2 mt-1 border-t border-gray-800 flex flex-col gap-2">
+                         <button (click)="network.togglePreferLocalInference(); $event.stopPropagation()"
+                                 [disabled]="!network.isOnline()"
+                                 class="flex items-center justify-between text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed pointer-events-auto cursor-pointer"
+                                 [class.text-green-400]="!network.preferLocalInference()"
+                                 [class.text-amber-400]="network.preferLocalInference()">
+                            <span>{{ network.preferLocalInference() ? '⚡ Use Cloud Gemini' : '🖥 Use Local PubGemma' }}</span>
+                            <span>→</span>
+                         </button>
                         <a href="/docs/study/" target="_blank" rel="noopener" class="flex items-center justify-between text-xs font-bold text-gray-400 hover:text-green-400 transition-colors pointer-events-auto cursor-pointer">
                            <span>VIEW DOCS</span>
                            <span>→</span>
@@ -558,7 +578,9 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
                  <!-- The Pocket Window styled like the Origami Theme -->
                  <div class="flex-1 w-full bg-gradient-to-br from-[#E1EAF4] to-[#C9DEEE] dark:from-[#0F172A] dark:to-[#1E293B] rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(30,58,95,0.4)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] border-[3px] border-white dark:border-[#334155] overflow-hidden pointer-events-auto flex flex-col relative ring-1 ring-[#1E3A5F]/10 dark:ring-black/50">
                     <!-- Embedded Voice Assistant logic takes over inner bounds transparently -->
-                    <app-voice-assistant class="block h-full w-full mix-blend-normal bg-white/70 dark:bg-black/50 backdrop-blur-md"></app-voice-assistant>
+                    @defer (on immediate) {
+                      <app-voice-assistant class="block h-full w-full mix-blend-normal bg-white/70 dark:bg-black/50 backdrop-blur-md"></app-voice-assistant>
+                    }
                  </div>
               </div>
             }
@@ -752,7 +774,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
           <!-- Footer -->
           <div class="px-8 py-5 border-t border-gray-300 dark:border-zinc-800 bg-gray-50/50 dark:bg-[#09090b]/50 flex justify-between items-center mt-auto">
             <button 
-              (click)="nativePrint()" 
+              (click)="printReport()" 
               class="px-5 py-2.5 border border-[#1C1C1C] dark:border-zinc-600 text-[#1C1C1C] dark:text-zinc-100 bg-transparent text-[9px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center gap-2 rounded-[2px]">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
               Print Document
@@ -796,6 +818,7 @@ export class AppComponent implements OnDestroy {
   private patientMgmt = inject(PatientManagementService);
   private clinicalIntelligence = inject(ClinicalIntelligenceService);
   network = inject(NetworkStateService);
+  readonly rules = inject(RulesEngineService);
   private aiConfig = inject(AI_CONFIG, { optional: true });
   today = new Date();
   hasApiKey = signal<boolean>(!!this.aiConfig?.apiKey);
@@ -845,6 +868,7 @@ export class AppComponent implements OnDestroy {
 
   async exportSimplifiedPdf() {
     this.isSimplifying.set(true);
+    this.rules.setContext('dyslexia_mode', true);
     try {
       const results = this.clinicalIntelligence.analysisResults();
       const patient = this.patientMgmt.selectedPatient();
@@ -861,12 +885,14 @@ export class AppComponent implements OnDestroy {
       console.error("Failed to generate simplified PDF", e);
       alert("Failed to generated simplified export. " + (e as Error).message);
     } finally {
+      this.rules.setContext('dyslexia_mode', false);
       this.isSimplifying.set(false);
     }
   }
 
   async exportChildPdf() {
     this.isSimplifyingChild.set(true);
+    this.rules.setContext('pediatric_mode', true);
     try {
       const results = this.clinicalIntelligence.analysisResults();
       const patient = this.patientMgmt.selectedPatient();
@@ -883,6 +909,7 @@ export class AppComponent implements OnDestroy {
       console.error("Failed to generate child PDF", e);
       alert("Failed to generated child export. " + (e as Error).message);
     } finally {
+      this.rules.setContext('pediatric_mode', false);
       this.isSimplifyingChild.set(false);
     }
   }
@@ -1063,9 +1090,6 @@ export class AppComponent implements OnDestroy {
     }
   }
 
-  nativePrint() {
-    window.print();
-  }
 
   printReport() {
     const p = this.patientMgmt.selectedPatient();
@@ -1074,42 +1098,46 @@ export class AppComponent implements OnDestroy {
     const level = this.selectedReadingLevel();
 
     if (level !== 'standard') {
-      const levelNames = {
+      const levelNames: Record<string, string> = {
         'simplified': 'Simplified (6th Grade)',
         'dyslexia': 'Cognition (Dyslexia-Friendly)',
         'child': 'Child (Pediatric)'
       };
       
-      let compositePlan = `## COGNITIVE LEVEL PLAN: ${levelNames[level]?.toUpperCase() || level.toUpperCase()}\n\n`;
-      compositePlan += `${textToPrint}\n\n`;
+      const translationMatrix = {
+        levelName: levelNames[level] || level.toUpperCase(),
+        translatedPlanMarkdown: this.previewText(),
+        originalPlanMarkdown: this.includeOriginalInPrint() ? this.originalPreviewText() : null,
+        analysisMarkdown: this.includeAnalysisInPrint() ? this.translationAnalysis() : null
+      };
 
-      if (this.includeAnalysisInPrint()) {
-        const analysis = this.translationAnalysis();
-        if (analysis) {
-          compositePlan += `### AI Translation Analysis\n${analysis}\n\n`;
-          compositePlan += `---\n\n`;
-        }
-      }
-
-      if (this.includeOriginalInPrint()) {
-        compositePlan += `### Original Clinical Plan (Provider Reference)\n${this.originalPreviewText()}`;
-      }
-      
-      textToPrint = compositePlan;
+      this.export.downloadCarePlanPdf(
+        '',
+        p?.name ?? 'Patient',
+        {
+          bp: vitals.bp || undefined,
+          hr: vitals.hr || undefined,
+          temp: vitals.temp || undefined,
+          spO2: vitals.spO2 || undefined,
+          weight: vitals.weight || undefined,
+        },
+        p?.preexistingConditions ?? [],
+        translationMatrix
+      );
+    } else {
+      this.export.downloadCarePlanPdf(
+        textToPrint,
+        p?.name ?? 'Patient',
+        {
+          bp: vitals.bp || undefined,
+          hr: vitals.hr || undefined,
+          temp: vitals.temp || undefined,
+          spO2: vitals.spO2 || undefined,
+          weight: vitals.weight || undefined,
+        },
+        p?.preexistingConditions ?? []
+      );
     }
-
-    this.export.downloadCarePlanPdf(
-      textToPrint,
-      p?.name ?? 'Patient',
-      {
-        bp: vitals.bp || undefined,
-        hr: vitals.hr || undefined,
-        temp: vitals.temp || undefined,
-        spO2: vitals.spO2 || undefined,
-        weight: vitals.weight || undefined,
-      },
-      p?.preexistingConditions ?? []
-    );
   }
 
   confirmFinalize() {

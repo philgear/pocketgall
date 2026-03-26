@@ -19,6 +19,22 @@ Powered by <DocNode term="@google/adk" category="Google · Agent Development Kit
 
 The system maintains **context-aware memory** of recently discussed report nodes, enabling inline follow-up queries without re-stating context.
 
+```mermaid
+graph TD
+  Microphone[Web Speech API] -->|Transcript| ADK(Agent Development Kit)
+  ADK --> LlmAgent1(Overview Expert)
+  ADK --> LlmAgent2(Interventions Expert)
+  ADK --> LlmAgent3(Monitoring Expert)
+  ADK --> LlmAgent4(Education Expert)
+  
+  LlmAgent1 -.->|Gemini 1.5 Pro| Vertex[Vertex AI]
+  LlmAgent2 -.->|Gemini 1.5 Pro| Vertex
+  LlmAgent3 -.->|Gemini 1.5 Pro| Vertex
+  LlmAgent4 -.->|Gemini 1.5 Pro| Vertex
+  
+  ADK -->|Synthesized Plan| UI[Clinical UI]
+```
+
 ### Care Plan Recommendation Engine
 
 A professional clinical analysis engine that synthesizes structured strategies for patient care. Output is organized by diagnostic lens, and each report node supports **inline agent queries** — click any recommendation to ask the AI directly about it.

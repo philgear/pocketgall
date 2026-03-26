@@ -16,6 +16,10 @@ RUN npm install --prefix docs --legacy-peer-deps
 # Build the Angular application
 RUN npm run build
 
+# Run as non-root for security
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+USER appuser
+
 # Expose port and run
 EXPOSE 8080
 ENV PORT=8080
