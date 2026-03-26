@@ -17,7 +17,8 @@ RUN npm install --prefix docs --legacy-peer-deps
 RUN npm run build
 
 # Run as non-root for security
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
+    && chown -R appuser:appgroup /app
 USER appuser
 
 # Expose port and run

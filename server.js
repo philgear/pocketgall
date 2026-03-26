@@ -166,9 +166,52 @@ app.get('/api/pubmed/summary', async (req, res) => {
   }
 });
 
-// Enable parsing JSON bodies for POST requests
-// Body limit: 1mb is generous for patient JSON; images go through /api/ai/analyze-image which handles its own sizing
+// Enable parsing JSON bodies for POST requests.
+// Global limit: 1mb — keeps DoS risk low.
+// /api/ai/analyze-image gets its own 20mb limit inline below to support base64 image payloads.
 app.use(express.json({ limit: '1mb' }));
+
+// ── /api/config ──────────────────────────────────────────────────────────────
+// Returns the Gemini API key ONLY to same-origin requests.
+// This replaces the old window.GEMINI_API_KEY HTML injection pattern.
+const ALLOWED_CONFIG_ORIGINS = [
+  'https://pocketgull.app',
+  'https://www.pocketgull.app',
+  'http://localhost:4200',
+  'http://localhost:8080',
+];
+app.get('/api/config', (req, res) => {
+  const origin = req.headers.origin || req.headers.referer || '';
+  const isAllowed = ALLOWED_CONFIG_ORIGINS.some(o => origin.startsWith(o));
+  if (!isAllowed) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  if (!geminiApiKeyCached) {
+    return res.status(503).json({ error: 'API key not yet available' });
+  }
+  return res.json({ apiKey: geminiApiKeyCached });
+});
+
+// ── /api/patients auth guard ──────────────────────────────────────────────────
+// Checks Authorization: Bearer <PATIENTS_SECRET> from env.
+// If PATIENTS_SECRET is unset (local dev), passes through with a warning.
+const requirePatientAuth = (req, res, next) => {
+  const secret = process.env.PATIENTS_SECRET;
+  if (!secret) {
+    console.warn('[AUTH] PATIENTS_SECRET not set — skipping patient auth (dev mode)');
+    return next();
+  }
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (token !== secret) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
+
+// ── /api/ai/analyze-image large-body override ─────────────────────────────────
+// Must come BEFORE the generic Angular SSR handler below.
+app.use('/api/ai/analyze-image', express.json({ limit: '20mb' }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -189,8 +232,8 @@ if (!fs.existsSync(patientsDbPath)) {
   fs.writeFileSync(patientsDbPath, JSON.stringify([], null, 2));
 }
 
-// Patients API Endpoints
-app.get('/api/patients', (req, res) => {
+// Patients API Endpoints — protected by requirePatientAuth
+app.get('/api/patients', requirePatientAuth, (req, res) => {
   try {
     const data = fs.readFileSync(patientsDbPath, 'utf8');
     res.setHeader('Content-Type', 'application/json');
@@ -201,7 +244,7 @@ app.get('/api/patients', (req, res) => {
   }
 });
 
-app.post('/api/patients', (req, res) => {
+app.post('/api/patients', requirePatientAuth, (req, res) => {
   try {
     if (!req.body || !Array.isArray(req.body)) {
       return res.status(400).json({ error: 'Body must be a JSON array of patients' });
@@ -218,7 +261,7 @@ app.post('/api/patients', (req, res) => {
   }
 });
 
-app.put('/api/patients/:id', (req, res) => {
+app.put('/api/patients/:id', requirePatientAuth, (req, res) => {
   try {
     const { id } = req.params;
     if (!req.body || typeof req.body !== 'object') {
@@ -269,21 +312,7 @@ app.get(/(.*)/, (req, res) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
-  if (fs.existsSync(indexPath)) {
-    try {
-      let html = fs.readFileSync(indexPath, 'utf8');
-      if (geminiApiKeyCached) {
-        // Inject script immediately before closing </head>
-        const scriptTag = `<script px-api-key="true">window.GEMINI_API_KEY = "${geminiApiKeyCached}";</script>\n</head>`;
-        html = html.replace('</head>', scriptTag);
-      }
-      res.setHeader('Content-Type', 'text/html');
-      return res.status(200).send(html);
-    } catch (err) {
-      console.error('[SERVER] Error injecting secret into index.html:', err);
-    }
-  }
-
+  // Key no longer injected into HTML — served via GET /api/config (same-origin only)
   res.sendFile(indexPath);
 });
 

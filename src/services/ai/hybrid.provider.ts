@@ -156,15 +156,27 @@ export class HybridProvider implements IntelligenceProvider {
 
   async startChat(patientData: string, context: string): Promise<void> {
     if (!this.network.useLocalInference()) {
-      try { await this.gemini.startChat(patientData, context); } catch (e1) {
-        try { await this.webgpu.startChat(patientData, context); } catch (e2) {
-          await this.nano.startChat(patientData, context);
+      // Chat sessions require a stateful backend; Nano is not a valid fallback
+      // in cloud mode as it requires Chrome 138+ with specific flags. Surface
+      // the real error (e.g. auth failure) rather than hiding it behind a Nano error.
+      try {
+        await this.gemini.startChat(patientData, context);
+      } catch (e1: any) {
+        try {
+          await this.webgpu.startChat(patientData, context);
+        } catch (e2: any) {
+          // Throw the original Gemini error so the UI shows the real problem
+          throw new Error(e1?.message ?? 'Cloud chat session could not be established.');
         }
       }
     } else {
-      try { await this.nvidia.startChat(patientData, context); } catch (e1) {
-        try { await this.webgpu.startChat(patientData, context); } catch (e2) {
-          await this.nano.startChat(patientData, context);
+      try {
+        await this.nvidia.startChat(patientData, context);
+      } catch (e1: any) {
+        try {
+          await this.webgpu.startChat(patientData, context);
+        } catch (e2: any) {
+          throw new Error(e1?.message ?? 'Local inference chat session could not be established.');
         }
       }
     }
@@ -172,15 +184,23 @@ export class HybridProvider implements IntelligenceProvider {
 
   async sendMessage(message: string, files?: File[]): Promise<string> {
     if (!this.network.useLocalInference()) {
-      try { return await this.gemini.sendMessage(message, files); } catch (e1) {
-        try { return await this.webgpu.sendMessage(message, files); } catch (e2) {
-          return await this.nano.sendMessage(message, files);
+      try {
+        return await this.gemini.sendMessage(message, files);
+      } catch (e1: any) {
+        try {
+          return await this.webgpu.sendMessage(message, files);
+        } catch (e2: any) {
+          throw new Error(e1?.message ?? 'Cloud AI chat engine is unavailable.');
         }
       }
     } else {
-      try { return await this.nvidia.sendMessage(message, files); } catch (e1) {
-        try { return await this.webgpu.sendMessage(message, files); } catch (e2) {
-          return await this.nano.sendMessage(message, files);
+      try {
+        return await this.nvidia.sendMessage(message, files);
+      } catch (e1: any) {
+        try {
+          return await this.webgpu.sendMessage(message, files);
+        } catch (e2: any) {
+          throw new Error(e1?.message ?? 'Local inference chat engine is unavailable.');
         }
       }
     }
@@ -188,15 +208,23 @@ export class HybridProvider implements IntelligenceProvider {
 
   async getInitialGreeting(prompt: string): Promise<string> {
     if (!this.network.useLocalInference()) {
-      try { return await this.gemini.getInitialGreeting(prompt); } catch (e1) {
-        try { return await this.webgpu.getInitialGreeting(prompt); } catch (e2) {
-          return await this.nano.getInitialGreeting(prompt);
+      try {
+        return await this.gemini.getInitialGreeting(prompt);
+      } catch (e1: any) {
+        try {
+          return await this.webgpu.getInitialGreeting(prompt);
+        } catch (e2: any) {
+          throw new Error(e1?.message ?? 'Cloud AI greeting unavailable.');
         }
       }
     } else {
-      try { return await this.nvidia.getInitialGreeting(prompt); } catch (e1) {
-        try { return await this.webgpu.getInitialGreeting(prompt); } catch (e2) {
-          return await this.nano.getInitialGreeting(prompt);
+      try {
+        return await this.nvidia.getInitialGreeting(prompt);
+      } catch (e1: any) {
+        try {
+          return await this.webgpu.getInitialGreeting(prompt);
+        } catch (e2: any) {
+          throw new Error(e1?.message ?? 'Local inference greeting unavailable.');
         }
       }
     }

@@ -169,35 +169,68 @@ export class RichMediaService {
 
     // ─── Wikimedia Commons ───────────────────────────────────────────────────
 
-    async searchWikimediaImages(query: string, limit = 6): Promise<WikimediaImage[]> {
-        const encoded = encodeURIComponent(`${query} anatomy medical`);
+    /** Strip medical stop-words and return the 1–2 most specific terms. */
+    private _simplifyQuery(query: string): string {
+        const STOP = new Set([
+            'physical', 'examination', 'assessment', 'evaluation', 'findings',
+            'clinical', 'medical', 'anatomy', 'and', 'or', 'of', 'the', 'a',
+            'in', 'with', 'for', 'to', 'from', 'by', 'at', 'on', 'overview',
+            'management', 'treatment', 'approach', 'general', 'imaging',
+            'review', 'related', 'relevant', 'associated'
+        ]);
+        const words = query.toLowerCase()
+            .replace(/[^a-z\s]/g, ' ')
+            .split(/\s+/)
+            .filter(w => w.length > 2 && !STOP.has(w));
+        // Return up to 2 words — enough for a targeted Wikimedia search
+        return words.slice(0, 2).join(' ') || query.split(/\s+/).slice(0, 2).join(' ');
+    }
+
+    private async _fetchWikimedia(searchTerm: string, limit: number): Promise<WikimediaImage[]> {
+        const encoded = encodeURIComponent(`${searchTerm} anatomy`);
         const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${encoded}&gsrlimit=${limit}&prop=imageinfo&iiprop=url|descriptionurl|extmetadata&iiurlwidth=400&format=json&origin=*`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const pages = data?.query?.pages ?? {};
+        return Object.values(pages)
+            .map((p: any) => {
+                const ii = p.imageinfo?.[0];
+                if (!ii?.url) return null;
+                const meta = ii.extmetadata ?? {};
+                return {
+                    title: p.title?.replace('File:', '') ?? '',
+                    url: ii.url ?? '',
+                    thumbUrl: ii.thumburl ?? ii.url ?? '',
+                    descriptionUrl: ii.descriptionurl ?? '',
+                    credit: meta.Credit?.value?.replace(/<[^>]+>/g, '') ?? 'Wikimedia Commons',
+                    license: meta.LicenseShortName?.value ?? 'See source'
+                } as WikimediaImage;
+            })
+            .filter((img): img is WikimediaImage => img !== null)
+            .filter(img => img.url.match(/\.(jpg|jpeg|png|svg|webp)$/i));
+    }
 
+    async searchWikimediaImages(query: string, limit = 6): Promise<WikimediaImage[]> {
         try {
-            const res = await fetch(url);
-            const data = await res.json();
-            const pages = data?.query?.pages ?? {};
+            // Step 1: try with simplified focused keywords
+            const simplified = this._simplifyQuery(query);
+            const results = await this._fetchWikimedia(simplified, limit);
+            if (results.length > 0) return results;
 
-            return Object.values(pages)
-                .map((p: any) => {
-                    const ii = p.imageinfo?.[0];
-                    if (!ii?.url) return null;
-                    const meta = ii.extmetadata ?? {};
-                    return {
-                        title: p.title?.replace('File:', '') ?? '',
-                        url: ii.url ?? '',
-                        thumbUrl: ii.thumburl ?? ii.url ?? '',
-                        descriptionUrl: ii.descriptionurl ?? '',
-                        credit: meta.Credit?.value?.replace(/<[^>]+>/g, '') ?? 'Wikimedia Commons',
-                        license: meta.LicenseShortName?.value ?? 'See source'
-                    } as WikimediaImage;
-                })
-                .filter((img): img is WikimediaImage => img !== null)
-                .filter(img => img.url.match(/\.(jpg|jpeg|png|svg|webp)$/i));
+            // Step 2: retry with just the very first keyword (broadest fallback)
+            const firstWord = simplified.split(/\s+/)[0];
+            if (firstWord && firstWord !== simplified) {
+                const fallback = await this._fetchWikimedia(firstWord, limit);
+                if (fallback.length > 0) return fallback;
+            }
+
+            // Step 3: last resort — try the raw original query (some specific terms work as-is)
+            return await this._fetchWikimedia(query.split(/\s+/).slice(0, 3).join(' '), limit);
         } catch {
             return [];
         }
     }
+
 
     // ─── PubMed ──────────────────────────────────────────────────────────────
 

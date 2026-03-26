@@ -2386,11 +2386,16 @@ export class PatientManagementService {
     this.saveCurrentPatientState(); // Ensure the latest state is saved
     try {
       const patientsToSync = this.patients();
-      await firstValueFrom(this.http.post("/api/patients", patientsToSync));
-      console.log("[PatientManagementService] Successfully synced to cloud");
+      // Include auth header if PATIENTS_SECRET was surfaced via /api/config or env
+      const secret = (window as any).__PATIENTS_SECRET__ || '';
+      const headers: Record<string, string> = secret
+        ? { Authorization: `Bearer ${secret}` }
+        : {};
+      await firstValueFrom(this.http.post('/api/patients', patientsToSync, { headers }));
+      console.log('[PatientManagementService] Successfully synced to cloud');
       return true;
     } catch (error) {
-      console.error("[PatientManagementService] Error syncing to cloud", error);
+      console.error('[PatientManagementService] Error syncing to cloud', error);
       return false;
     }
   }

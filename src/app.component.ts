@@ -192,32 +192,7 @@ import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill';
           </div>
           
           <div class="flex items-center gap-2">
-            <button (click)="isDirectoryOpen.set(!isDirectoryOpen())"
-                    aria-label="Toggle Patient Directory"
-                    class="group shrink-0 flex items-center gap-2 max-sm:px-2 max-sm:py-1.5 px-4 py-2 border transition-colors text-xs font-bold uppercase tracking-widest"
-                    [class.bg-gray-800]="isDirectoryOpen()"
-                    [class.dark:bg-white]="isDirectoryOpen()"
-                    [class.border-gray-800]="isDirectoryOpen()"
-                    [class.dark:border-white]="isDirectoryOpen()"
-                    [class.text-white]="isDirectoryOpen()"
-                    [class.dark:text-[#111111]]="isDirectoryOpen()"
-                    [class.bg-transparent]="!isDirectoryOpen()"
-                    [class.border-gray-300]="!isDirectoryOpen()"
-                    [class.dark:border-zinc-700]="!isDirectoryOpen()"
-                    [class.text-gray-700]="!isDirectoryOpen()"
-                    [class.dark:text-zinc-300]="!isDirectoryOpen()"
-                    [class.hover:bg-[#EEEEEE]]="!isDirectoryOpen()"
-                    [class.dark:hover:bg-zinc-800]="!isDirectoryOpen()"
-                    [class.hover:border-gray-400]="!isDirectoryOpen()"
-                    [class.dark:hover:border-zinc-500]="!isDirectoryOpen()">
-               <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                 <circle cx="9" cy="7" r="4"></circle>
-                 <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-               </svg>
-               <span class="hidden sm:inline">Roster</span>
-            </button>
+
 
             <button (click)="state.toggleLiveAgent(!state.isLiveAgentActive())"
                     aria-label="Toggle Live Agent"
@@ -1257,12 +1232,21 @@ export class AppComponent implements OnDestroy {
 
       this.isMobile.set(window.innerWidth < 768);
 
-      // 1. Check for server-injected key (Cloud Run production)
-      if ((window as any).GEMINI_API_KEY) {
-        this.hasApiKey.set(true);
-      }
+      // 1. Fetch API key from server (replaces window.GEMINI_API_KEY HTML injection)
+      //    The server only serves /api/config to same-origin requests.
+      try {
+        const configRes = await fetch('/api/config');
+        if (configRes.ok) {
+          const config = await configRes.json();
+          if (config?.apiKey) {
+            try { localStorage.setItem('GEMINI_API_KEY', config.apiKey); } catch (_e) { /* ignore */ }
+            (window as any).GEMINI_API_KEY = config.apiKey; // keep compat for ADK WS handshake
+            this.hasApiKey.set(true);
+          }
+        }
+      } catch (_e) { /* network offline or dev mode without server */ }
 
-      // 2. Check for stored API key in localStorage (manual entry)
+      // 2. Check for stored API key in localStorage (manual entry / offline fallback)
       if (!this.hasApiKey()) {
         try {
           const storedKey = localStorage.getItem('GEMINI_API_KEY');
